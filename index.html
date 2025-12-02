@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科幻小工具集合</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #ffffff;
+            color: #333;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 150, 255, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 100, 255, 0.05) 0%, transparent 20%);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        
+        .container.fade-out {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        
+        /* 标题入场动画 */
+        .title-container {
+            text-align: center;
+            margin: 40px 0 60px;
+            position: relative;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        
+        .title-container.fade-out {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        
+        .main-title {
+            font-size: 4rem;
+            font-weight: 800;
+            color: #0a1a3a;
+            letter-spacing: 4px;
+            position: relative;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .title-char {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(-30px);
+            animation: charDrop 0.6s forwards;
+        }
+        
+        @keyframes charDrop {
+            0% {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 分割线动画 */
+        .divider-container {
+            position: relative;
+            height: 4px;
+            margin: 0 auto 60px;
+            width: 80%;
+            max-width: 800px;
+            transition: opacity 0.6s ease;
+        }
+        
+        .divider-container.fade-out {
+            opacity: 0;
+        }
+        
+        .divider-line {
+            position: absolute;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, #0077ff, transparent);
+            top: 0;
+            width: 0;
+            box-shadow: 0 0 15px rgba(0, 119, 255, 0.7);
+            transition: width 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        
+        .divider-left {
+            left: 50%;
+            animation: expandLeft 1.2s 1.8s forwards cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        
+        .divider-right {
+            right: 50%;
+            animation: expandRight 1.2s 1.8s forwards cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        
+        .divider-left.collapse {
+            animation: collapseLeft 1s forwards cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        
+        .divider-right.collapse {
+            animation: collapseRight 1s forwards cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        
+        @keyframes expandLeft {
+            0% {
+                width: 0;
+                left: 50%;
+            }
+            100% {
+                width: 50%;
+                left: 0;
+            }
+        }
+        
+        @keyframes expandRight {
+            0% {
+                width: 0;
+                right: 50%;
+            }
+            100% {
+                width: 50%;
+                right: 0;
+            }
+        }
+        
+        @keyframes collapseLeft {
+            0% {
+                width: 50%;
+                left: 0;
+            }
+            100% {
+                width: 0;
+                left: 50%;
+            }
+        }
+        
+        @keyframes collapseRight {
+            0% {
+                width: 50%;
+                right: 0;
+            }
+            100% {
+                width: 0;
+                right: 50%;
+            }
+        }
+        
+        .divider-center {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #0077ff;
+            border-radius: 50%;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px rgba(0, 119, 255, 0.9);
+            animation: pulse 2s infinite;
+            transition: opacity 0.6s ease;
+        }
+        
+        .divider-center.fade-out {
+            opacity: 0;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 119, 255, 0.9);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(0, 119, 255, 1.2);
+            }
+        }
+        
+        /* 工具集区域 */
+        .tools-section {
+            margin-top: 60px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        
+        .tools-section.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .tools-section.fade-out {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.2rem;
+            color: #0a1a3a;
+            margin-bottom: 40px;
+            position: relative;
+            transition: opacity 0.6s ease;
+        }
+        
+        .section-title.fade-out {
+            opacity: 0;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #0077ff, transparent);
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            padding: 20px;
+            transition: opacity 0.6s ease;
+        }
+        
+        .tools-grid.fade-out {
+            opacity: 0.3;
+        }
+        
+        .tool-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 50, 150, 0.08);
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(0, 119, 255, 0.1);
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .tool-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .tool-card.fade-out {
+            opacity: 0 !important;
+            transform: scale(0.9) translateY(20px) !important;
+            pointer-events: none;
+        }
+        
+        .tool-card.selected {
+            opacity: 1 !important;
+            transform: scale(1.2) translateY(-20px) !important;
+            z-index: 100;
+            box-shadow: 0 25px 60px rgba(0, 119, 255, 0.3);
+            border-color: rgba(0, 119, 255, 0.6);
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-10px) !important;
+            box-shadow: 0 15px 40px rgba(0, 119, 255, 0.15);
+            border-color: rgba(0, 119, 255, 0.3);
+        }
+        
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0077ff, #00ccff);
+        }
+        
+        .tool-card-content {
+            padding: 30px 25px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .tool-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #0077ff;
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+        
+        .tool-card:hover .tool-icon {
+            transform: scale(1.1);
+        }
+        
+        .tool-card.selected .tool-icon {
+            transform: scale(1.3);
+            color: #0055cc;
+        }
+        
+        .tool-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #0a1a3a;
+        }
+        
+        .tool-card.selected .tool-name {
+            color: #0077ff;
+        }
+        
+        .tool-desc {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+        
+        .tool-card.selected .tool-desc {
+            color: #333;
+        }
+        
+        .tool-btn {
+            display: inline-block;
+            padding: 12px 28px;
+            background: linear-gradient(90deg, #0077ff, #00a2ff);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 119, 255, 0.3);
+        }
+        
+        .tool-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 119, 255, 0.4);
+            background: linear-gradient(90deg, #0066dd, #0090e6);
+        }
+        
+        .tool-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.7s;
+        }
+        
+        .tool-btn:hover::after {
+            left: 100%;
+        }
+        
+        /* 页脚 */
+        footer {
+            text-align: center;
+            margin-top: 80px;
+            padding: 30px;
+            color: #666;
+            font-size: 0.95rem;
+            border-top: 1px solid rgba(0, 119, 255, 0.1);
+            position: relative;
+            opacity: 0;
+            transition: opacity 1s ease 4.5s, transform 0.8s ease;
+        }
+        
+        footer.show {
+            opacity: 1;
+        }
+        
+        footer.fade-out {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #0077ff, transparent);
+        }
+        
+        .footer-text {
+            margin-bottom: 10px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 3rem;
+                letter-spacing: 2px;
+            }
+            
+            .tools-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 20px;
+                padding: 10px;
+            }
+            
+            .divider-container {
+                width: 90%;
+            }
+            
+            .tool-card.selected {
+                transform: scale(1.1) translateY(-10px) !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-title {
+                font-size: 2.5rem;
+                letter-spacing: 1px;
+            }
+            
+            .section-title {
+                font-size: 1.8rem;
+            }
+            
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* 背景装饰元素 */
+        .bg-element {
+            position: fixed;
+            z-index: -1;
+            opacity: 0.03;
+            transition: opacity 0.8s ease;
+        }
+        
+        .bg-element.fade-out {
+            opacity: 0;
+        }
+        
+        .bg-element-1 {
+            top: 10%;
+            left: 5%;
+            width: 200px;
+            height: 200px;
+            border: 2px solid #0077ff;
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+        
+        .bg-element-2 {
+            top: 60%;
+            right: 8%;
+            width: 150px;
+            height: 150px;
+            border: 2px solid #0077ff;
+            transform: rotate(45deg);
+            animation: float 25s infinite linear reverse;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* 加载提示 */
+        .loading-hint {
+            text-align: center;
+            margin: 30px 0;
+            color: #0077ff;
+            font-weight: 500;
+            opacity: 0.7;
+            transition: opacity 0.5s;
+        }
+        
+        .loading-hint.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        /* 跳转遮罩层 */
+        .transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+        
+        .transition-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+    </style>
+</head>
+<body>
+    <!-- 跳转遮罩层 -->
+    <div class="transition-overlay" id="transition-overlay"></div>
+    
+    <!-- 背景装饰元素 -->
+    <div class="bg-element bg-element-1" id="bg-element-1"></div>
+    <div class="bg-element bg-element-2" id="bg-element-2"></div>
+    
+    <div class="container" id="container">
+        <!-- 标题区域 -->
+        <div class="title-container" id="title-container">
+            <h1 class="main-title" id="animated-title">小工具集</h1>
+        </div>
+        
+        <!-- 分割线区域 -->
+        <div class="divider-container" id="divider-container">
+            <div class="divider-line divider-left" id="divider-left"></div>
+            <div class="divider-center" id="divider-center"></div>
+            <div class="divider-line divider-right" id="divider-right"></div>
+        </div>
+        
+        <!-- 加载提示 -->
+        <div class="loading-hint" id="loading-hint">
+            <i class="fas fa-spinner fa-spin"></i> 正在加载工具集，请稍候...
+        </div>
+        
+        <!-- 工具集区域 -->
+        <div class="tools-section" id="tools-section">
+            <h2 class="section-title" id="section-title">实用工具精选</h2>
+            
+            <div class="tools-grid" id="tools-container">
+                <!-- 工具卡片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer id="footer">
+            <p class="footer-text">© 2023 科幻小工具集合 | 前端工具集合</p>
+            <p>所有工具均在浏览器本地运行，保护您的隐私安全</p>
+        </footer>
+    </div>
+
+    <script>
+        // 工具数据
+        const tools = [
+            {
+                name: "Base64 编解码",
+                description: "将文本或文件转换为Base64编码，或从Base64编码解码回原始内容。支持文本和文件两种模式。",
+                icon: "fas fa-code",
+                link: "base64-tool.html",
+                color: "#0077ff"
+            },
+            {
+                name: "JSON 格式化",
+                description: "美化和格式化JSON数据，提供语法高亮、折叠、验证等功能，便于阅读和调试JSON结构。",
+                icon: "fas fa-bracket-curly",
+                link: "json-formatter.html",
+                color: "#00a2ff"
+            },
+            {
+                name: "时间戳转换",
+                description: "将时间戳转换为可读的日期时间格式，或从日期时间生成时间戳。支持多种时间格式和时区设置。",
+                icon: "fas fa-clock",
+                link: "timestamp-converter.html",
+                color: "#00ccff"
+            },
+            {
+                name: "颜色选择器",
+                description: "提供多种颜色选择模式，支持RGB、HEX、HSL等颜色格式转换，可生成调色板方案。",
+                icon: "fas fa-palette",
+                link: "color-picker.html",
+                color: "#8a2be2"
+            },
+            {
+                name: "二维码生成器",
+                description: "将文本、URL等内容转换为二维码图片，支持自定义颜色、尺寸和纠错级别，可下载生成的二维码。",
+                icon: "fas fa-qrcode",
+                link: "qr-generator.html",
+                color: "#32cd32"
+            },
+            {
+                name: "图片压缩",
+                description: "在线压缩图片文件，支持JPG、PNG、GIF等格式，可调整压缩质量，保持图片清晰度的同时减小文件大小。",
+                icon: "fas fa-file-image",
+                link: "image-compressor.html",
+                color: "#ff6347"
+            },
+            {
+                name: "密码生成器",
+                description: "生成高强度随机密码，可自定义长度、包含字符类型，确保账户安全。",
+                icon: "fas fa-key",
+                link: "password-generator.html",
+                color: "#ffa500"
+            },
+            {
+                name: "单位换算",
+                description: "提供长度、重量、温度、速度等多种单位之间的快速换算，支持常用单位和科学单位。",
+                icon: "fas fa-ruler-combined",
+                link: "unit-converter.html",
+                color: "#9b59b6"
+            },
+            {
+                name: "文本差异对比",
+                description: "比较两个文本文件或字符串之间的差异，高亮显示添加、删除和修改的内容。",
+                icon: "fas fa-file-alt",
+                link: "text-diff.html",
+                color: "#1abc9c"
+            },
+            {
+                name: "Markdown编辑器",
+                description: "在线Markdown编辑器，支持实时预览、语法高亮、导出HTML等功能，方便编写文档。",
+                icon: "fas fa-markdown",
+                link: "markdown-editor.html",
+                color: "#3498db"
+            },
+            {
+                name: "正则表达式测试",
+                description: "测试和验证正则表达式，高亮显示匹配结果，支持常用正则模式快速插入。",
+                icon: "fas fa-terminal",
+                link: "regex-tester.html",
+                color: "#e74c3c"
+            },
+            {
+                name: "加密工具",
+                description: "提供常见的加密算法，包括AES、DES、MD5、SHA等，支持文本加密和解密。",
+                icon: "fas fa-lock",
+                link: "encryption-tool.html",
+                color: "#2ecc71"
+            }
+        ];
+
+        // 动画状态管理
+        let isDividerAnimationComplete = false;
+        let cardsVisible = false;
+        let animationTimeout = null;
+        let isTransitioning = false; // 防止重复点击跳转
+
+        // 标题动画
+        document.addEventListener('DOMContentLoaded', function() {
+            const title = document.getElementById('animated-title');
+            const titleText = title.textContent;
+            title.textContent = '';
+            
+            // 为每个字符添加动画
+            for (let i = 0; i < titleText.length; i++) {
+                const charSpan = document.createElement('span');
+                charSpan.textContent = titleText[i];
+                charSpan.className = 'title-char';
+                charSpan.style.animationDelay = `${i * 0.1}s`;
+                title.appendChild(charSpan);
+            }
+            
+            // 动态生成工具卡片
+            const toolsContainer = document.getElementById('tools-container');
+            
+            // 为每个工具创建卡片
+            tools.forEach((tool, index) => {
+                const toolCard = document.createElement('div');
+                toolCard.className = 'tool-card';
+                toolCard.style.transitionDelay = `${index * 0.05}s`;
+                toolCard.setAttribute('data-index', index);
+                toolCard.setAttribute('data-link', tool.link);
+                
+                toolCard.innerHTML = `
+                    <div class="tool-card-content">
+                        <div class="tool-icon" style="color: ${tool.color}">
+                            <i class="${tool.icon}"></i>
+                        </div>
+                        <h3 class="tool-name">${tool.name}</h3>
+                        <p class="tool-desc">${tool.description}</p>
+                        <a href="#" class="tool-btn" data-index="${index}">立即使用</a>
+                    </div>
+                `;
+                
+                toolsContainer.appendChild(toolCard);
+            });
+            
+            // 监听分割线动画完成
+            const dividerLeft = document.getElementById('divider-left');
+            const dividerRight = document.getElementById('divider-right');
+            
+            // 设置动画完成的监听器
+            let leftAnimationComplete = false;
+            let rightAnimationComplete = false;
+            
+            const checkDividerAnimationComplete = () => {
+                if (leftAnimationComplete && rightAnimationComplete && !isDividerAnimationComplete) {
+                    isDividerAnimationComplete = true;
+                    console.log("分割线动画完成，开始加载工具卡片");
+                    
+                    // 隐藏加载提示
+                    const loadingHint = document.getElementById('loading-hint');
+                    loadingHint.classList.add('hidden');
+                    
+                    // 显示工具集区域
+                    const toolsSection = document.getElementById('tools-section');
+                    toolsSection.classList.add('show');
+                    
+                    // 延迟显示卡片
+                    animationTimeout = setTimeout(() => {
+                        showAllCards();
+                        cardsVisible = true;
+                        
+                        // 显示页脚
+                        const footer = document.getElementById('footer');
+                        footer.classList.add('show');
+                    }, 300);
+                }
+            };
+            
+            // 监听动画结束事件
+            dividerLeft.addEventListener('animationend', function() {
+                leftAnimationComplete = true;
+                checkDividerAnimationComplete();
+            });
+            
+            dividerRight.addEventListener('animationend', function() {
+                rightAnimationComplete = true;
+                checkDividerAnimationComplete();
+            });
+            
+            // 防止动画未触发的情况，设置一个超时备用
+            setTimeout(() => {
+                if (!isDividerAnimationComplete) {
+                    console.log("分割线动画超时，强制加载工具卡片");
+                    leftAnimationComplete = true;
+                    rightAnimationComplete = true;
+                    checkDividerAnimationComplete();
+                }
+            }, 5000); // 5秒超时
+            
+            // 添加工具按钮点击事件监听
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 如果正在跳转中，忽略点击
+                    if (isTransitioning) return;
+                    
+                    const index = this.getAttribute('data-index');
+                    const tool = tools[index];
+                    
+                    // 触发跳转动画
+                    triggerJumpAnimation(index, tool);
+                });
+            });
+        });
+        
+        // 显示所有卡片
+        function showAllCards() {
+            const cards = document.querySelectorAll('.tool-card');
+            cards.forEach(card => {
+                card.classList.add('visible');
+            });
+        }
+        
+        // 触发跳转动画
+        function triggerJumpAnimation(index, tool) {
+            // 设置跳转状态
+            isTransitioning = true;
+            
+            // 获取相关元素
+            const selectedCard = document.querySelector(`.tool-card[data-index="${index}"]`);
+            const allCards = document.querySelectorAll('.tool-card');
+            const toolsGrid = document.getElementById('tools-container');
+            const sectionTitle = document.getElementById('section-title');
+            const dividerLeft = document.getElementById('divider-left');
+            const dividerRight = document.getElementById('divider-right');
+            const dividerCenter = document.getElementById('divider-center');
+            const dividerContainer = document.getElementById('divider-container');
+            const titleContainer = document.getElementById('title-container');
+            const footer = document.getElementById('footer');
+            const container = document.getElementById('container');
+            const bgElements = document.querySelectorAll('.bg-element');
+            const transitionOverlay = document.getElementById('transition-overlay');
+            
+            // 1. 其他卡片淡出
+            allCards.forEach(card => {
+                if (card !== selectedCard) {
+                    card.classList.add('fade-out');
+                }
+            });
+            
+            // 2. 选中的卡片放大
+            selectedCard.classList.add('selected');
+            
+            // 3. 分割线从两边往中心收回
+            setTimeout(() => {
+                // 隐藏分割线中心点
+                dividerCenter.classList.add('fade-out');
+                
+                // 分割线收回动画
+                dividerLeft.classList.remove('divider-left');
+                dividerRight.classList.remove('divider-right');
+                dividerLeft.classList.add('collapse');
+                dividerRight.classList.add('collapse');
+                
+                // 隐藏其他元素
+                sectionTitle.classList.add('fade-out');
+                toolsGrid.classList.add('fade-out');
+                titleContainer.classList.add('fade-out');
+                footer.classList.add('fade-out');
+                dividerContainer.classList.add('fade-out');
+                
+                bgElements.forEach(el => el.classList.add('fade-out'));
+            }, 500);
+            
+            // 4. 整个容器淡出
+            setTimeout(() => {
+                container.classList.add('fade-out');
+            }, 1200);
+            
+            // 5. 显示过渡遮罩层
+            setTimeout(() => {
+                transitionOverlay.classList.add('active');
+            }, 1500);
+            
+            // 6. 跳转到目标页面
+            setTimeout(() => {
+                console.log(`跳转到: ${tool.link}`);
+                
+                // 在实际使用中，这里应该跳转到真实页面
+                // window.location.href = tool.link;
+                
+                // 演示：显示提示信息
+                alert(`正在跳转到: ${tool.name}\n\n在实际应用中，这里会跳转到: ${tool.link}`);
+                
+                // 重置状态以便下次点击
+                setTimeout(() => {
+                    resetJumpAnimation();
+                }, 100);
+            }, 2000);
+        }
+        
+        // 重置跳转动画状态
+        function resetJumpAnimation() {
+            // 获取相关元素
+            const selectedCard = document.querySelector('.tool-card.selected');
+            const allCards = document.querySelectorAll('.tool-card');
+            const toolsGrid = document.getElementById('tools-container');
+            const sectionTitle = document.getElementById('section-title');
+            const dividerLeft = document.getElementById('divider-left');
+            const dividerRight = document.getElementById('divider-right');
+            const dividerCenter = document.getElementById('divider-center');
+            const dividerContainer = document.getElementById('divider-container');
+            const titleContainer = document.getElementById('title-container');
+            const footer = document.getElementById('footer');
+            const container = document.getElementById('container');
+            const bgElements = document.querySelectorAll('.bg-element');
+            const transitionOverlay = document.getElementById('transition-overlay');
+            
+            // 移除所有淡出类
+            allCards.forEach(card => {
+                card.classList.remove('fade-out', 'selected');
+            });
+            
+            selectedCard.classList.remove('selected');
+            
+            // 恢复分割线
+            dividerLeft.classList.remove('collapse');
+            dividerRight.classList.remove('collapse');
+            dividerLeft.classList.add('divider-left');
+            dividerRight.classList.add('divider-right');
+            
+            // 恢复其他元素
+            sectionTitle.classList.remove('fade-out');
+            toolsGrid.classList.remove('fade-out');
+            titleContainer.classList.remove('fade-out');
+            footer.classList.remove('fade-out');
+            dividerContainer.classList.remove('fade-out');
+            dividerCenter.classList.remove('fade-out');
+            
+            bgElements.forEach(el => el.classList.remove('fade-out'));
+            container.classList.remove('fade-out');
+            transitionOverlay.classList.remove('active');
+            
+            // 重置状态
+            isTransitioning = false;
+        }
+        
+        // 滚动事件 - 现在只有在分割线动画完成后才会显示卡片
+        window.addEventListener('scroll', function() {
+            // 如果分割线动画未完成，不执行任何操作
+            if (!isDividerAnimationComplete) {
+                console.log("分割线动画未完成，忽略滚动事件");
+                return;
+            }
+            
+            // 如果卡片已经显示，不需要再次检查
+            if (cardsVisible) {
+                return;
+            }
+            
+            // 检查是否有卡片在视口中，如果有则显示
+            const cards = document.querySelectorAll('.tool-card:not(.visible)');
+            const windowHeight = window.innerHeight;
+            
+            cards.forEach(card => {
+                const cardTop = card.getBoundingClientRect().top;
+                if (cardTop < windowHeight - 100) {
+                    card.classList.add('visible');
+                }
+            });
+        });
+        
+        // 清理超时
+        window.addEventListener('beforeunload', function() {
+            if (animationTimeout) {
+                clearTimeout(animationTimeout);
+            }
+        });
+    </script>
+</body>
+</html>
