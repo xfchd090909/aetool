@@ -1,0 +1,2183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本加解密工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入CryptoJS库，用于加密算法 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #ffffff;
+            color: #333;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 150, 255, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 100, 255, 0.05) 0%, transparent 20%);
+        }
+        
+        /* 返回按钮 */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #0077ff, #00a2ff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            font-size: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 119, 255, 0.3);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideInLeft 0.5s 0.3s forwards;
+        }
+        
+        .back-btn:hover {
+            transform: scale(1.1) translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 119, 255, 0.4);
+            background: linear-gradient(135deg, #0066dd, #0090e6);
+        }
+        
+        @keyframes slideInLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s 0.5s forwards;
+        }
+        
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 标题区域 */
+        .title-container {
+            text-align: center;
+            margin: 60px 0 40px;
+            position: relative;
+        }
+        
+        .main-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #0a1a3a;
+            letter-spacing: 3px;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .title-char {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(-30px);
+            animation: charDrop 0.6s forwards;
+        }
+        
+        @keyframes charDrop {
+            0% {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 0.8s 1.2s forwards;
+        }
+        
+        /* 分割线 */
+        .divider-container {
+            position: relative;
+            height: 4px;
+            margin: 0 auto 60px;
+            width: 80%;
+            max-width: 800px;
+            opacity: 0;
+            animation: fadeIn 0.8s 1.5s forwards;
+        }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        .divider-line {
+            position: absolute;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, #0077ff, transparent);
+            top: 0;
+            width: 0;
+            box-shadow: 0 0 15px rgba(0, 119, 255, 0.7);
+        }
+        
+        .divider-left {
+            left: 50%;
+            animation: expandLeft 1.2s 1.8s forwards cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        
+        .divider-right {
+            right: 50%;
+            animation: expandRight 1.2s 1.8s forwards cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        
+        @keyframes expandLeft {
+            0% {
+                width: 0;
+                left: 50%;
+            }
+            100% {
+                width: 50%;
+                left: 0;
+            }
+        }
+        
+        @keyframes expandRight {
+            0% {
+                width: 0;
+                right: 50%;
+            }
+            100% {
+                width: 50%;
+                right: 0;
+            }
+        }
+        
+        .divider-center {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #0077ff;
+            border-radius: 50%;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px rgba(0, 119, 255, 0.9);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 119, 255, 0.9);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(0, 119, 255, 1.2);
+            }
+        }
+        
+        /* 主工具区域 */
+        .tool-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 50, 150, 0.1);
+            overflow: hidden;
+            margin-bottom: 40px;
+            border: 1px solid rgba(0, 119, 255, 0.1);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s 2.2s forwards;
+            position: relative;
+        }
+        
+        .tool-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0077ff, #00a2ff);
+        }
+        
+        .tool-content {
+            padding: 40px;
+        }
+        
+        /* 算法类型选项卡 */
+        .algorithm-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 40px;
+            justify-content: center;
+        }
+        
+        .algorithm-tab {
+            flex: 1;
+            min-width: 150px;
+            padding: 18px 20px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+        }
+        
+        .algorithm-tab i {
+            font-size: 1.5rem;
+            color: #0077ff;
+        }
+        
+        .algorithm-tab.active {
+            background: linear-gradient(135deg, #0077ff, #00a2ff);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 119, 255, 0.3);
+        }
+        
+        .algorithm-tab.active i {
+            color: white;
+        }
+        
+        .algorithm-tab:hover:not(.active) {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+        
+        .algorithm-desc {
+            font-size: 0.85rem;
+            font-weight: normal;
+            opacity: 0.8;
+        }
+        
+        /* 控制面板 */
+        .control-panel {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .control-panel h3 {
+            margin-bottom: 25px;
+            color: #0a1a3a;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-panel h3 i {
+            color: #0077ff;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .control-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #0a1a3a;
+            font-size: 1.1rem;
+        }
+        
+        .control-label .info {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: normal;
+            margin-left: 10px;
+        }
+        
+        /* 输入框样式 */
+        .input-field, .textarea-field {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+            background-color: white;
+        }
+        
+        .input-field:focus, .textarea-field:focus {
+            border-color: #0077ff;
+            box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.1);
+            outline: none;
+        }
+        
+        .textarea-field {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        /* 密钥强度指示器 */
+        .key-strength {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .strength-meter {
+            height: 8px;
+            flex: 1;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s, background-color 0.3s;
+        }
+        
+        .strength-weak {
+            background-color: #f44336;
+            width: 25%;
+        }
+        
+        .strength-fair {
+            background-color: #ff9800;
+            width: 50%;
+        }
+        
+        .strength-good {
+            background-color: #4caf50;
+            width: 75%;
+        }
+        
+        .strength-strong {
+            background-color: #2196f3;
+            width: 100%;
+        }
+        
+        /* 操作模式选项 */
+        .mode-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .mode-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .mode-radio {
+            display: none;
+        }
+        
+        .mode-label {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+        
+        .mode-radio:checked + .mode-label {
+            background: #0077ff;
+            color: white;
+        }
+        
+        /* 输出格式选项 */
+        .output-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .output-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .output-radio {
+            display: none;
+        }
+        
+        .output-label {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+        
+        .output-radio:checked + .output-label {
+            background: #0077ff;
+            color: white;
+        }
+        
+        /* 文本区域容器 */
+        .text-areas-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 900px) {
+            .text-areas-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .text-area-box {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: #f8f9fa;
+            position: relative;
+        }
+        
+        .text-area-box h4 {
+            padding: 15px;
+            background-color: #f0f0f0;
+            color: #0a1a3a;
+            margin: 0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .text-area-content {
+            padding: 20px;
+            position: relative;
+        }
+        
+        /* 字符计数 */
+        .char-count {
+            text-align: right;
+            margin-top: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* 控制按钮 */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 180px;
+        }
+        
+        .primary-btn {
+            background: linear-gradient(90deg, #0077ff, #00a2ff);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 119, 255, 0.3);
+        }
+        
+        .primary-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 119, 255, 0.4);
+            background: linear-gradient(90deg, #0066dd, #0090e6);
+        }
+        
+        .primary-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .secondary-btn {
+            background-color: #f0f0f0;
+            color: #444;
+        }
+        
+        .secondary-btn:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-2px);
+        }
+        
+        .success-btn {
+            background: linear-gradient(90deg, #4caf50, #66bb6a);
+            color: white;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .success-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4);
+            background: linear-gradient(90deg, #43a047, #4caf50);
+        }
+        
+        /* 复制按钮 */
+        .copy-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 119, 255, 0.1);
+            border: 1px solid rgba(0, 119, 255, 0.3);
+            color: #0077ff;
+            border-radius: 6px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(0, 119, 255, 0.2);
+        }
+        
+        /* 算法信息面板 */
+        .algorithm-info {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+            border: 1px solid rgba(0, 119, 255, 0.1);
+            display: none;
+        }
+        
+        .algorithm-info.active {
+            display: block;
+        }
+        
+        .algorithm-info h4 {
+            color: #0a1a3a;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .algorithm-details {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .algorithm-details {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .algorithm-description p {
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        .algorithm-description ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .algorithm-description li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+            color: #555;
+        }
+        
+        .algorithm-stats {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .stat-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .stat-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0a1a3a;
+        }
+        
+        /* 信息面板 */
+        .info-panel {
+            background-color: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 50, 150, 0.1);
+            margin-top: 50px;
+            border: 1px solid rgba(0, 119, 255, 0.1);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s 3.2s forwards;
+        }
+        
+        .info-panel h2 {
+            color: #0a1a3a;
+            margin-bottom: 25px;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .info-box {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #0077ff;
+        }
+        
+        .info-box h3 {
+            margin-bottom: 15px;
+            color: #0a1a3a;
+            font-size: 1.4rem;
+        }
+        
+        .info-box p {
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        .info-box ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .info-box li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+            color: #555;
+        }
+        
+        /* 页脚 */
+        footer {
+            text-align: center;
+            margin-top: 80px;
+            padding: 30px;
+            color: #666;
+            font-size: 0.95rem;
+            border-top: 1px solid rgba(0, 119, 255, 0.1);
+            position: relative;
+            opacity: 0;
+            animation: fadeIn 1s 3.5s forwards;
+        }
+        
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #0077ff, transparent);
+        }
+        
+        .footer-text {
+            margin-bottom: 10px;
+        }
+        
+        /* 背景装饰元素 */
+        .bg-element {
+            position: fixed;
+            z-index: -1;
+            opacity: 0.03;
+        }
+        
+        .bg-element-1 {
+            top: 10%;
+            left: 5%;
+            width: 200px;
+            height: 200px;
+            border: 2px solid #0077ff;
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+        
+        .bg-element-2 {
+            top: 60%;
+            right: 8%;
+            width: 150px;
+            height: 150px;
+            border: 2px solid #00a2ff;
+            transform: rotate(45deg);
+            animation: float 25s infinite linear reverse;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 2.8rem;
+                letter-spacing: 2px;
+            }
+            
+            .tool-content {
+                padding: 20px;
+            }
+            
+            .btn {
+                min-width: 100%;
+            }
+            
+            .back-btn {
+                top: 15px;
+                left: 15px;
+                width: 45px;
+                height: 45px;
+                font-size: 1.3rem;
+            }
+            
+            .algorithm-tab {
+                min-width: 120px;
+                padding: 12px 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-title {
+                font-size: 2.2rem;
+                letter-spacing: 1px;
+            }
+            
+            .tool-content {
+                padding: 15px;
+            }
+            
+            .tool-container, .info-panel {
+                padding: 20px;
+            }
+            
+            .back-btn {
+                top: 10px;
+                left: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+            
+            .text-areas-container {
+                gap: 20px;
+            }
+        }
+        
+        /* 状态消息 */
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            margin: 20px 30px 0;
+            border-radius: 8px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            opacity: 1;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            opacity: 1;
+        }
+        
+        /* 算法安全级别指示器 */
+        .security-level {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .security-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .security-low {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .security-medium {
+            background-color: #fff3e0;
+            color: #ef6c00;
+        }
+        
+        .security-high {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .security-very-high {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 返回按钮 -->
+    <a href="index.html" class="back-btn" id="backBtn">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    
+    <!-- 背景装饰元素 -->
+    <div class="bg-element bg-element-1"></div>
+    <div class="bg-element bg-element-2"></div>
+    
+    <div class="container">
+        <!-- 标题区域 -->
+        <div class="title-container">
+            <h1 class="main-title" id="animated-title">文本加解密工具</h1>
+            <p class="subtitle">支持AES、DES、MD5、SHA等多种加密算法，保护您的数据安全，并详细解释各种加密算法的原理和应用场景。</p>
+        </div>
+        
+        <!-- 分割线 -->
+        <div class="divider-container">
+            <div class="divider-line divider-left"></div>
+            <div class="divider-center"></div>
+            <div class="divider-line divider-right"></div>
+        </div>
+        
+        <!-- 主工具区域 -->
+        <div class="tool-container">
+            <div class="tool-content">
+                <!-- 算法类型选项卡 -->
+                <div class="algorithm-tabs">
+                    <button class="algorithm-tab active" data-algorithm="aes">
+                        <i class="fas fa-shield-alt"></i>
+                        AES
+                        <span class="algorithm-desc">高级加密标准</span>
+                    </button>
+                    <button class="algorithm-tab" data-algorithm="des">
+                        <i class="fas fa-lock"></i>
+                        DES
+                        <span class="algorithm-desc">数据加密标准</span>
+                    </button>
+                    <button class="algorithm-tab" data-algorithm="md5">
+                        <i class="fas fa-fingerprint"></i>
+                        MD5
+                        <span class="algorithm-desc">消息摘要算法</span>
+                    </button>
+                    <button class="algorithm-tab" data-algorithm="sha256">
+                        <i class="fas fa-hashtag"></i>
+                        SHA-256
+                        <span class="algorithm-desc">安全哈希算法</span>
+                    </button>
+                    <button class="algorithm-tab" data-algorithm="sha512">
+                        <i class="fas fa-code"></i>
+                        SHA-512
+                        <span class="algorithm-desc">安全哈希算法</span>
+                    </button>
+                    <button class="algorithm-tab" data-algorithm="base64">
+                        <i class="fas fa-exchange-alt"></i>
+                        Base64
+                        <span class="algorithm-desc">编码/解码</span>
+                    </button>
+                </div>
+                
+                <!-- 算法控制面板 -->
+                <div class="control-panel">
+                    <h3><i class="fas fa-sliders-h"></i> 加密设置</h3>
+                    
+                    <!-- AES设置 -->
+                    <div id="aesSettings" class="algorithm-settings active">
+                        <div class="control-group">
+                            <label class="control-label">
+                                加密密钥 <span class="info">(16, 24或32个字符)</span>
+                            </label>
+                            <input type="text" id="aesKey" class="input-field" placeholder="输入加密密钥 (例如: mySecretKey123456)" value="mySecretKey123456">
+                            <div class="key-strength">
+                                <span>密钥强度:</span>
+                                <div class="strength-meter">
+                                    <div class="strength-fill" id="aesKeyStrength"></div>
+                                </div>
+                                <span id="aesKeyStrengthText">未知</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label class="control-label">操作模式</label>
+                            <div class="mode-options">
+                                <div class="mode-option">
+                                    <input type="radio" id="aesModeCBC" name="aesMode" value="CBC" class="mode-radio" checked>
+                                    <label for="aesModeCBC" class="mode-label">CBC模式</label>
+                                </div>
+                                <div class="mode-option">
+                                    <input type="radio" id="aesModeECB" name="aesMode" value="ECB" class="mode-radio">
+                                    <label for="aesModeECB" class="mode-label">ECB模式</label>
+                                </div>
+                                <div class="mode-option">
+                                    <input type="radio" id="aesModeCFB" name="aesMode" value="CFB" class="mode-radio">
+                                    <label for="aesModeCFB" class="mode-label">CFB模式</label>
+                                </div>
+                                <div class="mode-option">
+                                    <input type="radio" id="aesModeOFB" name="aesMode" value="OFB" class="mode-radio">
+                                    <label for="aesModeOFB" class="mode-label">OFB模式</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label class="control-label">初始化向量 (IV)</label>
+                            <input type="text" id="aesIV" class="input-field" placeholder="输入初始化向量 (16个字符)" value="myInitialVector12">
+                            <div class="info">
+                                <small>仅CBC、CFB和OFB模式需要IV。如果留空，将使用全零IV。</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- DES设置 -->
+                    <div id="desSettings" class="algorithm-settings">
+                        <div class="control-group">
+                            <label class="control-label">
+                                加密密钥 <span class="info">(8个字符)</span>
+                            </label>
+                            <input type="text" id="desKey" class="input-field" placeholder="输入加密密钥 (8个字符)" value="deskey12">
+                            <div class="key-strength">
+                                <span>密钥强度:</span>
+                                <div class="strength-meter">
+                                    <div class="strength-fill" id="desKeyStrength"></div>
+                                </div>
+                                <span id="desKeyStrengthText">未知</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label class="control-label">操作模式</label>
+                            <div class="mode-options">
+                                <div class="mode-option">
+                                    <input type="radio" id="desModeCBC" name="desMode" value="CBC" class="mode-radio" checked>
+                                    <label for="desModeCBC" class="mode-label">CBC模式</label>
+                                </div>
+                                <div class="mode-option">
+                                    <input type="radio" id="desModeECB" name="desMode" value="ECB" class="mode-radio">
+                                    <label for="desModeECB" class="mode-label">ECB模式</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label class="control-label">初始化向量 (IV)</label>
+                            <input type="text" id="desIV" class="input-field" placeholder="输入初始化向量 (8个字符)" value="desiv123">
+                            <div class="info">
+                                <small>仅CBC模式需要IV。如果留空，将使用全零IV。</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- MD5设置 -->
+                    <div id="md5Settings" class="algorithm-settings">
+                        <div class="control-group">
+                            <label class="control-label">MD5是单向哈希函数，无法解密</label>
+                            <p style="color: #666; margin-top: 10px;">MD5算法将输入文本转换为固定长度的128位哈希值，通常用于验证数据完整性。请注意，MD5已不再安全，不应用于密码存储。</p>
+                        </div>
+                    </div>
+                    
+                    <!-- SHA-256设置 -->
+                    <div id="sha256Settings" class="algorithm-settings">
+                        <div class="control-group">
+                            <label class="control-label">SHA-256是单向哈希函数，无法解密</label>
+                            <p style="color: #666; margin-top: 10px;">SHA-256算法将输入文本转换为固定长度的256位哈希值，比MD5更安全，广泛应用于数字签名和区块链技术。</p>
+                        </div>
+                    </div>
+                    
+                    <!-- SHA-512设置 -->
+                    <div id="sha512Settings" class="algorithm-settings">
+                        <div class="control-group">
+                            <label class="control-label">SHA-512是单向哈希函数，无法解密</label>
+                            <p style="color: #666; margin-top: 10px;">SHA-512算法将输入文本转换为固定长度的512位哈希值，提供比SHA-256更强的安全性，适用于高安全性要求的场景。</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Base64设置 -->
+                    <div id="base64Settings" class="algorithm-settings">
+                        <div class="control-group">
+                            <label class="control-label">Base64是一种编码方案，不是加密算法</label>
+                            <p style="color: #666; margin-top: 10px;">Base64将二进制数据转换为ASCII字符串，常用于在文本协议中传输二进制数据。它可以被轻松解码，不提供安全性。</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 输出格式选项 -->
+                    <div class="control-group">
+                        <label class="control-label">输出格式</label>
+                        <div class="output-options">
+                            <div class="output-option">
+                                <input type="radio" id="outputHex" name="outputFormat" value="hex" class="output-radio" checked>
+                                <label for="outputHex" class="output-label">十六进制 (Hex)</label>
+                            </div>
+                            <div class="output-option">
+                                <input type="radio" id="outputBase64" name="outputFormat" value="base64" class="output-radio">
+                                <label for="outputBase64" class="output-label">Base64</label>
+                            </div>
+                            <div class="output-option">
+                                <input type="radio" id="outputUtf8" name="outputFormat" value="utf8" class="output-radio">
+                                <label for="outputUtf8" class="output-label">UTF-8文本</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 文本区域容器 -->
+                <div class="text-areas-container">
+                    <div class="text-area-box">
+                        <h4><i class="fas fa-keyboard"></i> 原始文本</h4>
+                        <div class="text-area-content">
+                            <textarea id="inputText" class="textarea-field" placeholder="请输入要加密/解密的文本...">这是一段需要加密的示例文本。</textarea>
+                            <button class="copy-btn" id="copyInputBtn">
+                                <i class="fas fa-copy"></i> 复制
+                            </button>
+                            <div class="char-count">
+                                字符数: <span id="inputCharCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-area-box">
+                        <h4><i class="fas fa-lock"></i> 加密/解密结果</h4>
+                        <div class="text-area-content">
+                            <textarea id="outputText" class="textarea-field" placeholder="加密或解密后的结果将显示在这里..." readonly></textarea>
+                            <button class="copy-btn" id="copyOutputBtn">
+                                <i class="fas fa-copy"></i> 复制
+                            </button>
+                            <div class="char-count">
+                                字符数: <span id="outputCharCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 控制按钮 -->
+                <div class="controls">
+                    <button id="encryptBtn" class="btn primary-btn">
+                        <i class="fas fa-lock"></i> 加密
+                    </button>
+                    
+                    <button id="decryptBtn" class="btn primary-btn">
+                        <i class="fas fa-unlock"></i> 解密
+                    </button>
+                    
+                    <button id="clearBtn" class="btn secondary-btn">
+                        <i class="fas fa-broom"></i> 清空
+                    </button>
+                    
+                    <button id="generateKeyBtn" class="btn success-btn">
+                        <i class="fas fa-key"></i> 生成随机密钥
+                    </button>
+                </div>
+                
+                <!-- 状态消息 -->
+                <div id="statusMessage" class="status-message"></div>
+                
+                <!-- 算法信息面板 -->
+                <div class="algorithm-info active" id="algorithmInfo">
+                    <h4><i class="fas fa-info-circle"></i> AES算法信息</h4>
+                    <div class="algorithm-details">
+                        <div class="algorithm-description">
+                            <p><strong>高级加密标准 (AES)</strong> 是一种对称加密算法，于2001年由美国国家标准与技术研究院 (NIST) 发布，用于替代老旧的DES算法。</p>
+                            <p>AES算法基于替代-置换网络结构，支持128、192和256位密钥长度，具有高安全性和高效率的特点。</p>
+                            <ul>
+                                <li><strong>密钥长度</strong>: 128位、192位或256位</li>
+                                <li><strong>分组大小</strong>: 128位 (16字节)</li>
+                                <li><strong>加密轮数</strong>: 10轮 (128位密钥)、12轮 (192位密钥)、14轮 (256位密钥)</li>
+                                <li><strong>安全性</strong>: 目前被认为是安全的，被广泛用于政府、军事和商业领域</li>
+                                <li><strong>应用场景</strong>: Wi-Fi安全 (WPA2)、TLS/SSL、磁盘加密、文件加密等</li>
+                            </ul>
+                        </div>
+                        <div class="algorithm-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">安全级别</div>
+                                <div class="stat-value">
+                                    <span class="security-badge security-very-high">非常高</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">加密类型</div>
+                                <div class="stat-value">对称加密</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">密钥长度</div>
+                                <div class="stat-value">128/192/256位</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">破解难度</div>
+                                <div class="stat-value">极高 (当前技术不可行)</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">推荐用途</div>
+                                <div class="stat-value">高安全性数据加密</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 信息面板 -->
+        <div class="info-panel">
+            <h2><i class="fas fa-info-circle"></i> 加密算法原理</h2>
+            <div class="info-content">
+                <div class="info-box">
+                    <h3>对称加密算法</h3>
+                    <p>对称加密算法使用相同的密钥进行加密和解密，加密和解密速度快，适合大量数据的加密。</p>
+                    <ul>
+                        <li><strong>AES</strong>: 高级加密标准，目前最常用的对称加密算法</li>
+                        <li><strong>DES</strong>: 数据加密标准，已不再安全，被AES取代</li>
+                        <li><strong>3DES</strong>: 三重DES，通过对DES三次加密提高安全性</li>
+                        <li><strong>Blowfish</strong>: 可变密钥长度的对称分组密码算法</li>
+                    </ul>
+                    <p><strong>优点</strong>: 加密速度快，适合大量数据<br>
+                    <strong>缺点</strong>: 密钥分发困难，密钥管理复杂</p>
+                </div>
+                
+                <div class="info-box">
+                    <h3>哈希算法</h3>
+                    <p>哈希算法将任意长度的输入转换为固定长度的输出，具有单向性和抗碰撞性。</p>
+                    <ul>
+                        <li><strong>MD5</strong>: 产生128位哈希值，已发现碰撞漏洞</li>
+                        <li><strong>SHA-1</strong>: 产生160位哈希值，已不再安全</li>
+                        <li><strong>SHA-256</strong>: SHA-2系列，产生256位哈希值</li>
+                        <li><strong>SHA-512</strong>: SHA-2系列，产生512位哈希值</li>
+                        <li><strong>SHA-3</strong>: 最新的SHA标准，采用不同的结构</li>
+                    </ul>
+                    <p><strong>应用</strong>: 数据完整性验证、密码存储、数字签名、区块链</p>
+                </div>
+                
+                <div class="info-box">
+                    <h3>加密模式</h3>
+                    <p>加密模式定义了如何将分组密码应用于数据，不同的模式提供不同的安全特性。</p>
+                    <ul>
+                        <li><strong>ECB</strong>: 电子密码本模式，相同明文产生相同密文</li>
+                        <li><strong>CBC</strong>: 密码块链接模式，每个块与前一密文块异或</li>
+                        <li><strong>CFB</strong>: 密码反馈模式，将分组密码转换为流密码</li>
+                        <li><strong>OFB</strong>: 输出反馈模式，类似CFB但错误不传播</li>
+                        <li><strong>CTR</strong>: 计数器模式，并行加密，适合多核处理器</li>
+                    </ul>
+                    <p><strong>推荐</strong>: CBC和CTR模式是最常用的安全模式</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer>
+            <p class="footer-text">© 2025 加密工具-小工具集</p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM元素
+        const backBtn = document.getElementById('backBtn');
+        const algorithmTabs = document.querySelectorAll('.algorithm-tab');
+        const algorithmSettings = document.querySelectorAll('.algorithm-settings');
+        const algorithmInfo = document.getElementById('algorithmInfo');
+        
+        // 输入输出元素
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const inputCharCount = document.getElementById('inputCharCount');
+        const outputCharCount = document.getElementById('outputCharCount');
+        const copyInputBtn = document.getElementById('copyInputBtn');
+        const copyOutputBtn = document.getElementById('copyOutputBtn');
+        
+        // 控制按钮元素
+        const encryptBtn = document.getElementById('encryptBtn');
+        const decryptBtn = document.getElementById('decryptBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const generateKeyBtn = document.getElementById('generateKeyBtn');
+        
+        // 状态消息元素
+        const statusMessage = document.getElementById('statusMessage');
+        
+        // AES设置元素
+        const aesKey = document.getElementById('aesKey');
+        const aesKeyStrength = document.getElementById('aesKeyStrength');
+        const aesKeyStrengthText = document.getElementById('aesKeyStrengthText');
+        const aesIV = document.getElementById('aesIV');
+        
+        // DES设置元素
+        const desKey = document.getElementById('desKey');
+        const desKeyStrength = document.getElementById('desKeyStrength');
+        const desKeyStrengthText = document.getElementById('desKeyStrengthText');
+        const desIV = document.getElementById('desIV');
+        
+        // 输出格式元素
+        const outputFormatRadios = document.querySelectorAll('input[name="outputFormat"]');
+        
+        // 全局变量
+        let currentAlgorithm = 'aes';
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 标题动画
+            const title = document.getElementById('animatedTitle');
+            const titleText = title.textContent;
+            title.textContent = '';
+            
+            for (let i = 0; i < titleText.length; i++) {
+                const charSpan = document.createElement('span');
+                charSpan.textContent = titleText[i];
+                charSpan.className = 'title-char';
+                charSpan.style.animationDelay = `${i * 0.1}s`;
+                title.appendChild(charSpan);
+            }
+            
+            // 更新字符计数
+            updateCharCounts();
+            
+            // 初始化密钥强度指示器
+            updateKeyStrength(aesKey, aesKeyStrength, aesKeyStrengthText);
+            updateKeyStrength(desKey, desKeyStrength, desKeyStrengthText);
+            
+            // 初始化示例文本
+            inputText.value = "这是一段需要加密的示例文本。\n\n加密技术是信息安全的基础，可以保护数据的机密性、完整性和可用性。";
+            updateCharCounts();
+        });
+        
+        // 算法选项卡切换
+        algorithmTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const algorithm = this.getAttribute('data-algorithm');
+                switchAlgorithm(algorithm);
+            });
+        });
+        
+        function switchAlgorithm(algorithm) {
+            currentAlgorithm = algorithm;
+            
+            // 更新选项卡状态
+            algorithmTabs.forEach(tab => {
+                tab.classList.toggle('active', tab.getAttribute('data-algorithm') === algorithm);
+            });
+            
+            // 更新设置面板显示
+            algorithmSettings.forEach(settings => {
+                settings.classList.toggle('active', settings.id === `${algorithm}Settings`);
+            });
+            
+            // 更新算法信息面板
+            updateAlgorithmInfo(algorithm);
+            
+            // 更新解密按钮状态
+            updateDecryptButtonState(algorithm);
+            
+            // 显示状态消息
+            showStatus(`已切换到${getAlgorithmName(algorithm)}算法`, 'success');
+        }
+        
+        // 获取算法名称
+        function getAlgorithmName(algorithm) {
+            const algorithmNames = {
+                'aes': 'AES',
+                'des': 'DES',
+                'md5': 'MD5',
+                'sha256': 'SHA-256',
+                'sha512': 'SHA-512',
+                'base64': 'Base64'
+            };
+            return algorithmNames[algorithm] || algorithm;
+        }
+        
+        // 更新算法信息面板
+        function updateAlgorithmInfo(algorithm) {
+            let title, description, stats;
+            
+            switch(algorithm) {
+                case 'aes':
+                    title = 'AES算法信息';
+                    description = `
+                        <p><strong>高级加密标准 (AES)</strong> 是一种对称加密算法，于2001年由美国国家标准与技术研究院 (NIST) 发布，用于替代老旧的DES算法。</p>
+                        <p>AES算法基于替代-置换网络结构，支持128、192和256位密钥长度，具有高安全性和高效率的特点。</p>
+                        <ul>
+                            <li><strong>密钥长度</strong>: 128位、192位或256位</li>
+                            <li><strong>分组大小</strong>: 128位 (16字节)</li>
+                            <li><strong>加密轮数</strong>: 10轮 (128位密钥)、12轮 (192位密钥)、14轮 (256位密钥)</li>
+                            <li><strong>安全性</strong>: 目前被认为是安全的，被广泛用于政府、军事和商业领域</li>
+                            <li><strong>应用场景</strong>: Wi-Fi安全 (WPA2)、TLS/SSL、磁盘加密、文件加密等</li>
+                        </ul>
+                    `;
+                    stats = `
+                        <div class="stat-item">
+                            <div class="stat-label">安全级别</div>
+                            <div class="stat-value">
+                                <span class="security-badge security-very-high">非常高</span>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">加密类型</div>
+                            <div class="stat-value">对称加密</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">密钥长度</div>
+                            <div class="stat-value">128/192/256位</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">破解难度</div>
+                            <div class="stat-value">极高 (当前技术不可行)</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">推荐用途</div>
+                            <div class="stat-value">高安全性数据加密</div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'des':
+                    title = 'DES算法信息';
+                    description = `
+                        <p><strong>数据加密标准 (DES)</strong> 是一种对称加密算法，于1977年被美国政府采纳为联邦标准。DES使用56位密钥，现已不再安全。</p>
+                        <p>DES算法基于Feistel网络结构，将64位明文分组加密为64位密文分组。由于密钥长度较短，易受暴力破解攻击。</p>
+                        <ul>
+                            <li><strong>密钥长度</strong>: 56位有效密钥长度 (64位包含奇偶校验位)</li>
+                            <li><strong>分组大小</strong>: 64位 (8字节)</li>
+                            <li><strong>加密轮数</strong>: 16轮</li>
+                            <li><strong>安全性</strong>: 已不再安全，1999年被AES取代</li>
+                            <li><strong>应用场景</strong>: 主要用于历史系统，现代应用中应使用AES</li>
+                        </ul>
+                    `;
+                    stats = `
+                        <div class="stat-item">
+                            <div class="stat-label">安全级别</div>
+                            <div class="stat-value">
+                                <span class="security-badge security-low">低</span>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">加密类型</div>
+                            <div class="stat-value">对称加密</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">密钥长度</div>
+                            <div class="stat-value">56位</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">破解难度</div>
+                            <div class="stat-value">低 (已可被暴力破解)</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">推荐用途</div>
+                            <div class="stat-value">仅用于兼容旧系统</div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'md5':
+                    title = 'MD5算法信息';
+                    description = `
+                        <p><strong>MD5 (消息摘要算法5)</strong> 是一种广泛使用的密码散列函数，产生128位 (16字节) 的哈希值。MD5已不再安全，不应用于密码存储。</p>
+                        <p>MD5算法将任意长度的输入转换为固定长度的输出，具有单向性和抗碰撞性。然而，已发现MD5存在碰撞漏洞。</p>
+                        <ul>
+                            <li><strong>哈希长度</strong>: 128位 (16字节)</li>
+                            <li><strong>处理方式</strong>: 512位分组处理</li>
+                            <li><strong>安全性</strong>: 已不再安全，存在碰撞攻击</li>
+                            <li><strong>应用场景</strong>: 数据完整性检查、文件校验 (不推荐用于密码存储)</li>
+                            <li><strong>替代方案</strong>: SHA-256或SHA-3系列</li>
+                        </ul>
+                    `;
+                    stats = `
+                        <div class="stat-item">
+                            <div class="stat-label">安全级别</div>
+                            <div class="stat-value">
+                                <span class="security-badge security-low">低</span>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">算法类型</div>
+                            <div class="stat-value">哈希函数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">输出长度</div>
+                            <div class="stat-value">128位</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">破解难度</div>
+                            <div class="stat-value">低 (存在碰撞攻击)</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">推荐用途</div>
+                            <div class="stat-value">非安全性检查、文件校验</div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'sha256':
+                    title = 'SHA-256算法信息';
+                    description = `
+                        <p><strong>SHA-256 (安全哈希算法256位)</strong> 是SHA-2系列中的一种哈希函数，产生256位 (32字节) 的哈希值。比MD5和SHA-1更安全。</p>
+                        <p>SHA-256算法基于Merkle-Damgård结构，将输入消息处理为512位的分组。广泛应用于数字签名和区块链技术。</p>
+                        <ul>
+                            <li><strong>哈希长度</strong>: 256位 (32字节)</li>
+                            <li><strong>处理方式</strong>: 512位分组处理</li>
+                            <li><strong>安全性</strong>: 目前被认为是安全的</li>
+                            <li><strong>应用场景</strong>: 数字签名、SSL/TLS证书、区块链、密码存储</li>
+                            <li><strong>相关算法</strong>: SHA-224、SHA-384、SHA-512</li>
+                        </ul>
+                    `;
+                    stats = `
+                        <div class="stat-item">
+                            <div class="stat-label">安全级别</div>
+                            <div class="stat-value">
+                                <span class="security-badge security-high">高</span>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">算法类型</div>
+                            <div class="stat-value">哈希函数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">输出长度</div>
+                            <div class="stat-value">256位</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">破解难度</div>
+                            <div class="stat-value">高 (当前技术不可行)</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">推荐用途</div>
+                            <div class="stat-value">密码存储、数字签名、区块链</div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'sha512':
+                    title = 'SHA-512算法信息';
+                    description = `
+                        <p><strong>SHA-512 (安全哈希算法512位)</strong> 是SHA-2系列中的一种哈希函数，产生512位 (64字节) 的哈希值。提供比SHA-256更强的安全性。</p>
+                        <p>SHA-512算法处理1024位的消息分组，使用80轮计算。适用于需要更高安全级别的场景。</p>
+                        <ul>
+                            <li><strong>哈希长度</strong>: 512位 (64字节)</li>
+                            <li><strong>处理方式</strong>: 1024位分组处理</li>
+                            <li><strong>安全性</strong>: 目前被认为是安全的</li>
+                            <li><strong>应用场景</strong>: 高安全性密码存储、数字签名、密钥派生</li>
+                            <li><strong>性能</strong>: 比SHA-256稍慢，但安全性更高</li>
+                        </ul>
+                    `;
+                    stats = `
+                        <div class="stat-item">
+                            <div class="stat-label">安全级别</div>
+                            <div class="stat-value">
+                                <span class="security-badge security-very-high">非常高</span>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">算法类型</div>
+                            <div class="stat-value">哈希函数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">输出长度</div>
+                            <div class="stat-value">512位</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">破解难度</div>
+                            <div class="stat-value">极高 (当前技术不可行)</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">推荐用途</div>
+                            <div class="stat-value">高安全性密码存储、数字签名</div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'base64':
+                    title = 'Base64编码信息';
+                    description = `
+                        <p><strong>Base64</strong> 是一种基于64个可打印字符来表示二进制数据的编码方案，不是加密算法，不提供安全性。</p>
+                        <p>Base64编码将每3个字节 (24位) 的数据转换为4个Base64字符。常用于在文本协议 (如HTTP、XML) 中传输二进制数据。</p>
+                        <ul>
+                            <li><strong>字符集</strong>: A-Z、a-z、0-9、+、/ 共64个字符</li>
+                            <li><strong>填充字符</strong>: = (等号) 用于末尾填充</li>
+                            <li><strong>安全性</strong>: 无安全性，可以轻松解码</li>
+                            <li><strong>应用场景</strong>: 电子邮件附件、数据URL、HTTP基本认证</li>
+                            <li><strong>变体</strong>: Base64URL (用于URL安全编码)</li>
+                        </ul>
+                    `;
+                    stats = `
+                        <div class="stat-item">
+                            <div class="stat-label">安全级别</div>
+                            <div class="stat-value">
+                                <span class="security-badge security-low">无安全性</span>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">算法类型</div>
+                            <div class="stat-value">编码方案</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">输出长度</div>
+                            <div class="stat-value">增加约33%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">可逆性</div>
+                            <div class="stat-value">完全可逆</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">推荐用途</div>
+                            <div class="stat-value">文本协议中的二进制数据传输</div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            algorithmInfo.querySelector('h4').innerHTML = `<i class="fas fa-info-circle"></i> ${title}`;
+            algorithmInfo.querySelector('.algorithm-description').innerHTML = description;
+            algorithmInfo.querySelector('.algorithm-stats').innerHTML = stats;
+        }
+        
+        // 更新解密按钮状态
+        function updateDecryptButtonState(algorithm) {
+            // 哈希算法和Base64没有解密功能
+            if (algorithm === 'md5' || algorithm === 'sha256' || algorithm === 'sha512') {
+                decryptBtn.disabled = true;
+                decryptBtn.title = '此算法不支持解密';
+            } else if (algorithm === 'base64') {
+                decryptBtn.disabled = false;
+                decryptBtn.title = 'Base64解码';
+            } else {
+                decryptBtn.disabled = false;
+                decryptBtn.title = '解密';
+            }
+        }
+        
+        // 更新字符计数
+        function updateCharCounts() {
+            inputCharCount.textContent = inputText.value.length;
+            outputCharCount.textContent = outputText.value.length;
+        }
+        
+        // 更新密钥强度
+        function updateKeyStrength(keyElement, strengthElement, strengthTextElement) {
+            keyElement.addEventListener('input', function() {
+                const key = this.value;
+                let strength = 0;
+                let strengthText = '未知';
+                let strengthClass = '';
+                
+                // 根据算法和密钥长度计算强度
+                if (currentAlgorithm === 'aes') {
+                    if (key.length >= 32) {
+                        strength = 100;
+                        strengthText = '非常强 (256位)';
+                        strengthClass = 'strength-strong';
+                    } else if (key.length >= 24) {
+                        strength = 75;
+                        strengthText = '强 (192位)';
+                        strengthClass = 'strength-good';
+                    } else if (key.length >= 16) {
+                        strength = 50;
+                        strengthText = '中等 (128位)';
+                        strengthClass = 'strength-fair';
+                    } else if (key.length > 0) {
+                        strength = 25;
+                        strengthText = '弱 (密钥太短)';
+                        strengthClass = 'strength-weak';
+                    }
+                } else if (currentAlgorithm === 'des') {
+                    if (key.length >= 8) {
+                        strength = 25;
+                        strengthText = '弱 (DES已不安全)';
+                        strengthClass = 'strength-weak';
+                    } else if (key.length > 0) {
+                        strength = 10;
+                        strengthText = '非常弱 (密钥太短)';
+                        strengthClass = 'strength-weak';
+                    }
+                }
+                
+                // 更新显示
+                strengthElement.className = 'strength-fill ' + strengthClass;
+                strengthTextElement.textContent = strengthText;
+            });
+            
+            // 触发一次初始更新
+            keyElement.dispatchEvent(new Event('input'));
+        }
+        
+        // 显示状态消息
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message ' + type;
+            
+            // 3秒后隐藏消息
+            setTimeout(() => {
+                statusMessage.className = 'status-message';
+            }, 3000);
+        }
+        
+        // 获取输出格式
+        function getOutputFormat() {
+            for (const radio of outputFormatRadios) {
+                if (radio.checked) {
+                    return radio.value;
+                }
+            }
+            return 'hex'; // 默认值
+        }
+        
+        // 获取AES模式
+        function getAESMode() {
+            const modeRadios = document.querySelectorAll('input[name="aesMode"]');
+            for (const radio of modeRadios) {
+                if (radio.checked) {
+                    return radio.value;
+                }
+            }
+            return 'CBC'; // 默认值
+        }
+        
+        // 获取DES模式
+        function getDESMode() {
+            const modeRadios = document.querySelectorAll('input[name="desMode"]');
+            for (const radio of modeRadios) {
+                if (radio.checked) {
+                    return radio.value;
+                }
+            }
+            return 'CBC'; // 默认值
+        }
+        
+        // 生成随机密钥
+        generateKeyBtn.addEventListener('click', function() {
+            let keyLength, key;
+            
+            if (currentAlgorithm === 'aes') {
+                // AES支持128, 192, 256位密钥 (16, 24, 32字节)
+                const lengths = [16, 24, 32];
+                keyLength = lengths[Math.floor(Math.random() * lengths.length)];
+                key = generateRandomString(keyLength);
+                aesKey.value = key;
+                updateKeyStrength(aesKey, aesKeyStrength, aesKeyStrengthText);
+                showStatus(`已生成${keyLength*8}位AES随机密钥`, 'success');
+            } else if (currentAlgorithm === 'des') {
+                // DES使用8字节密钥
+                keyLength = 8;
+                key = generateRandomString(keyLength);
+                desKey.value = key;
+                updateKeyStrength(desKey, desKeyStrength, desKeyStrengthText);
+                showStatus('已生成DES随机密钥', 'success');
+            } else {
+                showStatus('此算法不需要密钥', 'error');
+                return;
+            }
+        });
+        
+        // 生成随机字符串
+        function generateRandomString(length) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+        
+        // 加密功能
+        encryptBtn.addEventListener('click', function() {
+            const input = inputText.value.trim();
+            if (!input) {
+                showStatus('请输入要加密的文本', 'error');
+                return;
+            }
+            
+            let result;
+            try {
+                switch(currentAlgorithm) {
+                    case 'aes':
+                        result = encryptAES(input);
+                        break;
+                    case 'des':
+                        result = encryptDES(input);
+                        break;
+                    case 'md5':
+                        result = hashMD5(input);
+                        break;
+                    case 'sha256':
+                        result = hashSHA256(input);
+                        break;
+                    case 'sha512':
+                        result = hashSHA512(input);
+                        break;
+                    case 'base64':
+                        result = encodeBase64(input);
+                        break;
+                    default:
+                        result = '未知算法';
+                }
+                
+                outputText.value = result;
+                updateCharCounts();
+                showStatus(`${getAlgorithmName(currentAlgorithm)}加密成功`, 'success');
+            } catch (error) {
+                outputText.value = `加密失败: ${error.message}`;
+                updateCharCounts();
+                showStatus(`加密失败: ${error.message}`, 'error');
+            }
+        });
+        
+        // 解密功能
+        decryptBtn.addEventListener('click', function() {
+            const input = inputText.value.trim();
+            if (!input) {
+                showStatus('请输入要解密的文本', 'error');
+                return;
+            }
+            
+            let result;
+            try {
+                switch(currentAlgorithm) {
+                    case 'aes':
+                        result = decryptAES(input);
+                        break;
+                    case 'des':
+                        result = decryptDES(input);
+                        break;
+                    case 'base64':
+                        result = decodeBase64(input);
+                        break;
+                    default:
+                        result = '此算法不支持解密';
+                }
+                
+                outputText.value = result;
+                updateCharCounts();
+                showStatus(`${getAlgorithmName(currentAlgorithm)}解密成功`, 'success');
+            } catch (error) {
+                outputText.value = `解密失败: ${error.message}`;
+                updateCharCounts();
+                showStatus(`解密失败: ${error.message}`, 'error');
+            }
+        });
+        
+        // AES加密
+        function encryptAES(text) {
+            const key = aesKey.value;
+            const mode = getAESMode();
+            const iv = aesIV.value || '0000000000000000';
+            const outputFormat = getOutputFormat();
+            
+            if (!key) {
+                throw new Error('请输入AES密钥');
+            }
+            
+            // 根据模式创建加密器
+            let encrypted;
+            switch(mode) {
+                case 'CBC':
+                    encrypted = CryptoJS.AES.encrypt(text, CryptoJS.enc.Utf8.parse(key), {
+                        iv: CryptoJS.enc.Utf8.parse(iv),
+                        mode: CryptoJS.mode.CBC,
+                        padding: CryptoJS.pad.Pkcs7
+                    });
+                    break;
+                case 'ECB':
+                    encrypted = CryptoJS.AES.encrypt(text, CryptoJS.enc.Utf8.parse(key), {
+                        mode: CryptoJS.mode.ECB,
+                        padding: CryptoJS.pad.Pkcs7
+                    });
+                    break;
+                case 'CFB':
+                    encrypted = CryptoJS.AES.encrypt(text, CryptoJS.enc.Utf8.parse(key), {
+                        iv: CryptoJS.enc.Utf8.parse(iv),
+                        mode: CryptoJS.mode.CFB,
+                        padding: CryptoJS.pad.Pkcs7
+                    });
+                    break;
+                case 'OFB':
+                    encrypted = CryptoJS.AES.encrypt(text, CryptoJS.enc.Utf8.parse(key), {
+                        iv: CryptoJS.enc.Utf8.parse(iv),
+                        mode: CryptoJS.mode.OFB,
+                        padding: CryptoJS.pad.Pkcs7
+                    });
+                    break;
+                default:
+                    throw new Error('不支持的AES模式');
+            }
+            
+            // 根据输出格式返回结果
+            if (outputFormat === 'hex') {
+                return encrypted.ciphertext.toString(CryptoJS.enc.Hex);
+            } else if (outputFormat === 'base64') {
+                return encrypted.toString();
+            } else {
+                return encrypted.toString(CryptoJS.enc.Utf8);
+            }
+        }
+        
+        // AES解密
+        function decryptAES(text) {
+            const key = aesKey.value;
+            const mode = getAESMode();
+            const iv = aesIV.value || '0000000000000000';
+            
+            if (!key) {
+                throw new Error('请输入AES密钥');
+            }
+            
+            // 根据输入格式解析密文
+            let ciphertext;
+            const outputFormat = getOutputFormat();
+            
+            if (outputFormat === 'hex') {
+                ciphertext = CryptoJS.enc.Hex.parse(text);
+            } else if (outputFormat === 'base64') {
+                ciphertext = CryptoJS.enc.Base64.parse(text);
+            } else {
+                ciphertext = CryptoJS.enc.Utf8.parse(text);
+            }
+            
+            // 创建密文对象
+            const cipherParams = CryptoJS.lib.CipherParams.create({
+                ciphertext: ciphertext
+            });
+            
+            // 根据模式解密
+            let decrypted;
+            switch(mode) {
+                case 'CBC':
+                    decrypted = CryptoJS.AES.decrypt(cipherParams, CryptoJS.enc.Utf8.parse(key), {
+                        iv: CryptoJS.enc.Utf8.parse(iv),
+                        mode: CryptoJS.mode.CBC,
+                        padding: CryptoJS.pad.Pkcs7
+                    });
+                    break;
+                case 'ECB':
+                    decrypted = CryptoJS.AES.decrypt(cipherParams, CryptoJS.enc.Utf8.parse(key), {
+                        mode: CryptoJS.mode.ECB,
+                        padding: CryptoJS.pad.Pkcs7
+                    });
+                    break;
+                case 'CFB':
+                    decrypted = CryptoJS.AES.decrypt(cipherParams, CryptoJS.enc.Utf8.parse(key), {
+                        iv: CryptoJS.enc.Utf8.parse(iv),
+                        mode: CryptoJS.mode.CFB,
+                        padding: CryptoJS.pad.Pkcs7
+                    });
+                    break;
+                case 'OFB':
+                    decrypted = CryptoJS.AES.decrypt(cipherParams, CryptoJS.enc.Utf8.parse(key), {
+                        iv: CryptoJS.enc.Utf8.parse(iv),
+                        mode: CryptoJS.mode.OFB,
+                        padding: CryptoJS.pad.Pkcs7
+                    });
+                    break;
+                default:
+                    throw new Error('不支持的AES模式');
+            }
+            
+            return decrypted.toString(CryptoJS.enc.Utf8);
+        }
+        
+        // DES加密
+        function encryptDES(text) {
+            const key = desKey.value;
+            const mode = getDESMode();
+            const iv = desIV.value || '00000000';
+            const outputFormat = getOutputFormat();
+            
+            if (!key) {
+                throw new Error('请输入DES密钥');
+            }
+            
+            // 根据模式创建加密器
+            let encrypted;
+            switch(mode) {
+                case 'CBC':
+                    encrypted = CryptoJS.DES.encrypt(text, CryptoJS.enc.Utf8.parse(key), {
+                        iv: CryptoJS.enc.Utf8.parse(iv),
+                        mode: CryptoJS.mode.CBC,
+                        padding: CryptoJS.pad.Pkcs7
+                    });
+                    break;
+                case 'ECB':
+                    encrypted = CryptoJS.DES.encrypt(text, CryptoJS.enc.Utf8.parse(key), {
+                        mode: CryptoJS.mode.ECB,
+                        padding: CryptoJS.pad.Pkcs7
+                    });
+                    break;
+                default:
+                    throw new Error('不支持的DES模式');
+            }
+            
+            // 根据输出格式返回结果
+            if (outputFormat === 'hex') {
+                return encrypted.ciphertext.toString(CryptoJS.enc.Hex);
+            } else if (outputFormat === 'base64') {
+                return encrypted.toString();
+            } else {
+                return encrypted.toString(CryptoJS.enc.Utf8);
+            }
+        }
+        
+        // DES解密
+        function decryptDES(text) {
+            const key = desKey.value;
+            const mode = getDESMode();
+            const iv = desIV.value || '00000000';
+            
+            if (!key) {
+                throw new Error('请输入DES密钥');
+            }
+            
+            // 根据输入格式解析密文
+            let ciphertext;
+            const outputFormat = getOutputFormat();
+            
+            if (outputFormat === 'hex') {
+                ciphertext = CryptoJS.enc.Hex.parse(text);
+            } else if (outputFormat === 'base64') {
+                ciphertext = CryptoJS.enc.Base64.parse(text);
+            } else {
+                ciphertext = CryptoJS.enc.Utf8.parse(text);
+            }
+            
+            // 创建密文对象
+            const cipherParams = CryptoJS.lib.CipherParams.create({
+                ciphertext: ciphertext
+            });
+            
+            // 根据模式解密
+            let decrypted;
+            switch(mode) {
+                case 'CBC':
+                    decrypted = CryptoJS.DES.decrypt(cipherParams, CryptoJS.enc.Utf8.parse(key), {
+                        iv: CryptoJS.enc.Utf8.parse(iv),
+                        mode: CryptoJS.mode.CBC,
+                        padding: CryptoJS.pad.Pkcs7
+                    });
+                    break;
+                case 'ECB':
+                    decrypted = CryptoJS.DES.decrypt(cipherParams, CryptoJS.enc.Utf8.parse(key), {
+                        mode: CryptoJS.mode.ECB,
+                        padding: CryptoJS.pad.Pkcs7
+                    });
+                    break;
+                default:
+                    throw new Error('不支持的DES模式');
+            }
+            
+            return decrypted.toString(CryptoJS.enc.Utf8);
+        }
+        
+        // MD5哈希
+        function hashMD5(text) {
+            return CryptoJS.MD5(text).toString();
+        }
+        
+        // SHA-256哈希
+        function hashSHA256(text) {
+            return CryptoJS.SHA256(text).toString();
+        }
+        
+        // SHA-512哈希
+        function hashSHA512(text) {
+            return CryptoJS.SHA512(text).toString();
+        }
+        
+        // Base64编码
+        function encodeBase64(text) {
+            return CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(text));
+        }
+        
+        // Base64解码
+        function decodeBase64(text) {
+            try {
+                return CryptoJS.enc.Base64.parse(text).toString(CryptoJS.enc.Utf8);
+            } catch (e) {
+                throw new Error('无效的Base64编码');
+            }
+        }
+        
+        // 清空功能
+        clearBtn.addEventListener('click', function() {
+            inputText.value = '';
+            outputText.value = '';
+            updateCharCounts();
+            showStatus('已清空所有内容', 'success');
+        });
+        
+        // 复制输入文本
+        copyInputBtn.addEventListener('click', function() {
+            copyToClipboard(inputText.value, copyInputBtn);
+        });
+        
+        // 复制输出文本
+        copyOutputBtn.addEventListener('click', function() {
+            copyToClipboard(outputText.value, copyOutputBtn);
+        });
+        
+        // 复制到剪贴板
+        function copyToClipboard(text, button) {
+            if (!text) {
+                showStatus('没有可复制的内容', 'error');
+                return;
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                // 显示复制成功提示
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> 已复制';
+                button.style.background = 'rgba(76, 175, 80, 0.1)';
+                button.style.borderColor = 'rgba(76, 175, 80, 0.3)';
+                button.style.color = '#4caf50';
+                
+                // 2秒后恢复原状
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.background = 'rgba(0, 119, 255, 0.1)';
+                    button.style.borderColor = 'rgba(0, 119, 255, 0.3)';
+                    button.style.color = '#0077ff';
+                }, 2000);
+                
+                showStatus('已复制到剪贴板', 'success');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                showStatus('复制失败，请手动复制', 'error');
+            });
+        }
+        
+        // 实时更新字符计数
+        inputText.addEventListener('input', updateCharCounts);
+        outputText.addEventListener('input', updateCharCounts);
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', function(event) {
+            // Ctrl+E 加密
+            if (event.ctrlKey && event.key === 'e') {
+                event.preventDefault();
+                encryptBtn.click();
+            }
+            
+            // Ctrl+D 解密
+            if (event.ctrlKey && event.key === 'd' && !decryptBtn.disabled) {
+                event.preventDefault();
+                decryptBtn.click();
+            }
+            
+            // Ctrl+C 复制输出
+            if (event.ctrlKey && event.key === 'c' && outputText.value) {
+                event.preventDefault();
+                copyOutputBtn.click();
+            }
+            
+            // Ctrl+L 清空
+            if (event.ctrlKey && event.key === 'l') {
+                event.preventDefault();
+                clearBtn.click();
+            }
+            
+            // Ctrl+G 生成密钥
+            if (event.ctrlKey && event.key === 'g') {
+                event.preventDefault();
+                generateKeyBtn.click();
+            }
+        });
+        
+        // 页面加载时更新解密按钮状态
+        window.addEventListener('load', function() {
+            updateDecryptButtonState(currentAlgorithm);
+            updateAlgorithmInfo(currentAlgorithm);
+        });
+    </script>
+</body>
+</html>
