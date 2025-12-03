@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间戳转换工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #ffffff;
+            color: #333;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 150, 255, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 100, 255, 0.05) 0%, transparent 20%);
+        }
+        
+        /* 返回按钮 */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #0077ff, #00a2ff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            font-size: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 119, 255, 0.3);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideInLeft 0.5s 0.3s forwards;
+        }
+        
+        .back-btn:hover {
+            transform: scale(1.1) translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 119, 255, 0.4);
+            background: linear-gradient(135deg, #0066dd, #0090e6);
+        }
+        
+        @keyframes slideInLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s 0.5s forwards;
+        }
+        
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 标题区域 */
+        .title-container {
+            text-align: center;
+            margin: 60px 0 40px;
+            position: relative;
+        }
+        
+        .main-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #0a1a3a;
+            letter-spacing: 3px;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .title-char {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(-30px);
+            animation: charDrop 0.6s forwards;
+        }
+        
+        @keyframes charDrop {
+            0% {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 0.8s 1.2s forwards;
+        }
+        
+        /* 分割线 */
+        .divider-container {
+            position: relative;
+            height: 4px;
+            margin: 0 auto 60px;
+            width: 80%;
+            max-width: 800px;
+            opacity: 0;
+            animation: fadeIn 0.8s 1.5s forwards;
+        }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        .divider-line {
+            position: absolute;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, #0077ff, transparent);
+            top: 0;
+            width: 0;
+            box-shadow: 0 0 15px rgba(0, 119, 255, 0.7);
+        }
+        
+        .divider-left {
+            left: 50%;
+            animation: expandLeft 1.2s 1.8s forwards cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        
+        .divider-right {
+            right: 50%;
+            animation: expandRight 1.2s 1.8s forwards cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        
+        @keyframes expandLeft {
+            0% {
+                width: 0;
+                left: 50%;
+            }
+            100% {
+                width: 50%;
+                left: 0;
+            }
+        }
+        
+        @keyframes expandRight {
+            0% {
+                width: 0;
+                right: 50%;
+            }
+            100% {
+                width: 50%;
+                right: 0;
+            }
+        }
+        
+        .divider-center {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #0077ff;
+            border-radius: 50%;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px rgba(0, 119, 255, 0.9);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 119, 255, 0.9);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(0, 119, 255, 1.2);
+            }
+        }
+        
+        /* 当前时间显示 */
+        .current-time-container {
+            background: linear-gradient(135deg, #0077ff, #00a2ff);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 119, 255, 0.2);
+            color: white;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s 2.2s forwards;
+        }
+        
+        .current-time-container h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .time-display {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .timestamp-display {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* 工具区域 */
+        .tool-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 50, 150, 0.1);
+            overflow: hidden;
+            margin-bottom: 40px;
+            border: 1px solid rgba(0, 119, 255, 0.1);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s 2.5s forwards;
+            position: relative;
+        }
+        
+        .tool-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0077ff, #00ccff);
+        }
+        
+        .conversion-sections {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .conversion-section {
+            flex: 1;
+            min-width: 300px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s forwards;
+        }
+        
+        .conversion-section:nth-child(1) {
+            animation-delay: 2.8s;
+        }
+        
+        .conversion-section:nth-child(2) {
+            animation-delay: 3.0s;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #0a1a3a;
+            font-size: 1.5rem;
+        }
+        
+        .section-header i {
+            color: #0077ff;
+        }
+        
+        /* 输入输出区域 */
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #e1e5ee;
+            transition: border-color 0.3s;
+        }
+        
+        .input-wrapper:focus-within {
+            border-color: #0077ff;
+            box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.1);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            background-color: #f9f9ff;
+            border: none;
+            outline: none;
+            font-family: 'Courier New', monospace;
+        }
+        
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%230077ff' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 12px;
+        }
+        
+        .result-display {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            min-height: 54px;
+            border: 2px solid #e1e5ee;
+            word-wrap: break-word;
+        }
+        
+        .result-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        /* 时间格式选项 */
+        .format-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .format-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .format-option input {
+            width: auto;
+        }
+        
+        .format-label {
+            font-size: 14px;
+        }
+        
+        /* 控制按钮区域 */
+        .controls {
+            padding: 0 30px 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s 3.2s forwards;
+        }
+        
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 180px;
+        }
+        
+        .primary-btn {
+            background: linear-gradient(90deg, #0077ff, #00a2ff);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 119, 255, 0.3);
+        }
+        
+        .primary-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 119, 255, 0.4);
+            background: linear-gradient(90deg, #0066dd, #0090e6);
+        }
+        
+        .secondary-btn {
+            background-color: #f0f0f0;
+            color: #444;
+        }
+        
+        .secondary-btn:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-2px);
+        }
+        
+        /* 状态消息 */
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            margin: 20px 30px 0;
+            border-radius: 8px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            opacity: 1;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            opacity: 1;
+        }
+        
+        /* 信息面板 */
+        .info-panel {
+            background-color: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 50, 150, 0.1);
+            margin-top: 50px;
+            border: 1px solid rgba(0, 119, 255, 0.1);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s 3.5s forwards;
+        }
+        
+        .info-panel h2 {
+            color: #0a1a3a;
+            margin-bottom: 25px;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .info-box {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #0077ff;
+        }
+        
+        .info-box h3 {
+            margin-bottom: 15px;
+            color: #0a1a3a;
+            font-size: 1.4rem;
+        }
+        
+        .info-box p {
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        .info-box ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .info-box li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+            color: #555;
+        }
+        
+        /* 页脚 */
+        footer {
+            text-align: center;
+            margin-top: 80px;
+            padding: 30px;
+            color: #666;
+            font-size: 0.95rem;
+            border-top: 1px solid rgba(0, 119, 255, 0.1);
+            position: relative;
+            opacity: 0;
+            animation: fadeIn 1s 3.8s forwards;
+        }
+        
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #0077ff, transparent);
+        }
+        
+        .footer-text {
+            margin-bottom: 10px;
+        }
+        
+        /* 背景装饰元素 */
+        .bg-element {
+            position: fixed;
+            z-index: -1;
+            opacity: 0.03;
+        }
+        
+        .bg-element-1 {
+            top: 10%;
+            left: 5%;
+            width: 200px;
+            height: 200px;
+            border: 2px solid #0077ff;
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+        
+        .bg-element-2 {
+            top: 60%;
+            right: 8%;
+            width: 150px;
+            height: 150px;
+            border: 2px solid #0077ff;
+            transform: rotate(45deg);
+            animation: float 25s infinite linear reverse;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 2.8rem;
+                letter-spacing: 2px;
+            }
+            
+            .conversion-sections {
+                flex-direction: column;
+            }
+            
+            .conversion-section {
+                min-width: 100%;
+            }
+            
+            .btn {
+                min-width: 100%;
+            }
+            
+            .back-btn {
+                top: 15px;
+                left: 15px;
+                width: 45px;
+                height: 45px;
+                font-size: 1.3rem;
+            }
+            
+            .time-display {
+                font-size: 1.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-title {
+                font-size: 2.2rem;
+                letter-spacing: 1px;
+            }
+            
+            .conversion-sections {
+                padding: 20px;
+            }
+            
+            .tool-container, .info-panel {
+                padding: 20px;
+            }
+            
+            .back-btn {
+                top: 10px;
+                left: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+            
+            .time-display {
+                font-size: 1.5rem;
+            }
+            
+            .format-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 返回按钮 -->
+    <a href="index.html" class="back-btn" id="backBtn">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    
+    <!-- 背景装饰元素 -->
+    <div class="bg-element bg-element-1"></div>
+    <div class="bg-element bg-element-2"></div>
+    
+    <div class="container">
+        <!-- 标题区域 -->
+        <div class="title-container">
+            <h1 class="main-title" id="animated-title">时间戳转换</h1>
+            <p class="subtitle">时间戳与日期时间互相转换工具，支持多种时间格式和时区设置，帮助您快速处理时间数据。</p>
+        </div>
+        
+        <!-- 分割线 -->
+        <div class="divider-container">
+            <div class="divider-line divider-left"></div>
+            <div class="divider-center"></div>
+            <div class="divider-line divider-right"></div>
+        </div>
+        
+        <!-- 当前时间显示 -->
+        <div class="current-time-container">
+            <h3><i class="fas fa-clock"></i> 当前时间</h3>
+            <div class="time-display" id="currentTime">正在加载...</div>
+            <div class="timestamp-display">时间戳: <span id="currentTimestamp">0</span></div>
+        </div>
+        
+        <!-- 工具区域 -->
+        <div class="tool-container">
+            <div class="conversion-sections">
+                <!-- 时间戳转日期时间 -->
+                <div class="conversion-section">
+                    <div class="section-header">
+                        <i class="fas fa-calendar-alt"></i>
+                        <h3>时间戳 → 日期时间</h3>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="timestampInput">时间戳</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="timestampInput" placeholder="输入时间戳（秒或毫秒）" value="">
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>时间戳单位</label>
+                        <div class="input-wrapper">
+                            <select id="timestampUnit">
+                                <option value="seconds">秒（10位）</option>
+                                <option value="milliseconds">毫秒（13位）</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>时区设置</label>
+                        <div class="input-wrapper">
+                            <select id="timezoneFrom">
+                                <option value="local">本地时区</option>
+                                <option value="UTC">UTC（协调世界时）</option>
+                                <option value="GMT">GMT（格林尼治标准时间）</option>
+                                <option value="+08:00">UTC+8（中国标准时间）</option>
+                                <option value="+09:00">UTC+9（日本标准时间）</option>
+                                <option value="-05:00">UTC-5（美国东部时间）</option>
+                                <option value="-08:00">UTC-8（美国太平洋时间）</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>输出格式</label>
+                        <div class="format-options">
+                            <label class="format-option">
+                                <input type="radio" name="outputFormat" value="full" checked>
+                                <span class="format-label">完整格式</span>
+                            </label>
+                            <label class="format-option">
+                                <input type="radio" name="outputFormat" value="dateOnly">
+                                <span class="format-label">仅日期</span>
+                            </label>
+                            <label class="format-option">
+                                <input type="radio" name="outputFormat" value="timeOnly">
+                                <span class="format-label">仅时间</span>
+                            </label>
+                            <label class="format-option">
+                                <input type="radio" name="outputFormat" value="iso">
+                                <span class="format-label">ISO格式</span>
+                            </label>
+                            <label class="format-option">
+                                <input type="radio" name="outputFormat" value="custom">
+                                <span class="format-label">自定义</span>
+                            </label>
+                        </div>
+                        
+                        <div class="input-wrapper" id="customFormatContainer" style="display: none; margin-top: 10px;">
+                            <input type="text" id="customFormat" placeholder="例如：YYYY-MM-DD HH:mm:ss">
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <span class="result-label">转换结果</span>
+                        <div class="result-display" id="timestampResult">等待转换...</div>
+                    </div>
+                </div>
+                
+                <!-- 日期时间转时间戳 -->
+                <div class="conversion-section">
+                    <div class="section-header">
+                        <i class="fas fa-history"></i>
+                        <h3>日期时间 → 时间戳</h3>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="datetimeInput">日期时间</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="datetimeInput" placeholder="例如：2023-01-01 12:00:00">
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>输入格式</label>
+                        <div class="input-wrapper">
+                            <select id="inputFormat">
+                                <option value="auto">自动识别</option>
+                                <option value="YYYY-MM-DD HH:mm:ss">YYYY-MM-DD HH:mm:ss</option>
+                                <option value="YYYY/MM/DD HH:mm:ss">YYYY/MM/DD HH:mm:ss</option>
+                                <option value="YYYY年MM月DD日 HH时mm分ss秒">YYYY年MM月DD日 HH时mm分ss秒</option>
+                                <option value="MM/DD/YYYY HH:mm:ss">MM/DD/YYYY HH:mm:ss</option>
+                                <option value="DD/MM/YYYY HH:mm:ss">DD/MM/YYYY HH:mm:ss</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>时区设置</label>
+                        <div class="input-wrapper">
+                            <select id="timezoneTo">
+                                <option value="local">本地时区</option>
+                                <option value="UTC">UTC（协调世界时）</option>
+                                <option value="GMT">GMT（格林尼治标准时间）</option>
+                                <option value="+08:00">UTC+8（中国标准时间）</option>
+                                <option value="+09:00">UTC+9（日本标准时间）</option>
+                                <option value="-05:00">UTC-5（美国东部时间）</option>
+                                <option value="-08:00">UTC-8（美国太平洋时间）</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>输出单位</label>
+                        <div class="input-wrapper">
+                            <select id="outputUnit">
+                                <option value="seconds">秒（10位）</option>
+                                <option value="milliseconds" selected>毫秒（13位）</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <span class="result-label">转换结果</span>
+                        <div class="result-display" id="datetimeResult">等待转换...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="convertTimestampBtn" class="btn primary-btn">
+                    <i class="fas fa-exchange-alt"></i> 转换时间戳
+                </button>
+                
+                <button id="convertDatetimeBtn" class="btn primary-btn">
+                    <i class="fas fa-exchange-alt"></i> 转换日期时间
+                </button>
+                
+                <button id="nowBtn" class="btn primary-btn">
+                    <i class="fas fa-sync-alt"></i> 使用当前时间
+                </button>
+                
+                <button id="clearBtn" class="btn secondary-btn">
+                    <i class="fas fa-broom"></i> 清空所有
+                </button>
+                
+                <button id="copyTimestampBtn" class="btn secondary-btn">
+                    <i class="fas fa-copy"></i> 复制结果
+                </button>
+            </div>
+            
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+        
+        <!-- 信息面板 -->
+        <div class="info-panel">
+            <h2><i class="fas fa-info-circle"></i> 关于时间戳转换</h2>
+            <div class="info-content">
+                <div class="info-box">
+                    <h3>什么是时间戳？</h3>
+                    <p>时间戳（Timestamp）是计算机中记录时间的一种方式，表示从特定时间点（通常是1970年1月1日00:00:00 UTC）到当前时间的总秒数或毫秒数。</p>
+                    <p>时间戳是跨平台、跨时区的统一时间表示方法，在编程、数据库和系统日志中广泛应用。</p>
+                </div>
+                
+                <div class="info-box">
+                    <h3>使用说明</h3>
+                    <ul>
+                        <li><strong>时间戳转日期时间</strong>：输入时间戳，选择单位和时区，转换为可读日期</li>
+                        <li><strong>日期时间转时间戳</strong>：输入日期时间，选择格式和时区，转换为时间戳</li>
+                        <li><strong>时区设置</strong>：支持本地时区、UTC和各种时区偏移</li>
+                        <li><strong>多种格式</strong>：支持完整格式、仅日期、仅时间、ISO格式等</li>
+                        <li><strong>实时更新</strong>：顶部显示当前时间和时间戳</li>
+                        <li><strong>快捷操作</strong>：使用当前时间、清空所有、复制结果</li>
+                    </ul>
+                </div>
+                
+                <div class="info-box">
+                    <h3>常见用途</h3>
+                    <ul>
+                        <li>API开发中的时间处理</li>
+                        <li>数据库时间字段转换</li>
+                        <li>日志时间分析</li>
+                        <li>跨时区应用开发</li>
+                        <li>时间计算和比较</li>
+                        <li>数据可视化和分析</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer>
+            <p class="footer-text">© 2023 时间戳转换工具 | 纯前端实现，数据不会离开您的浏览器</p>
+            <p>本工具使用 JavaScript 的 Date 对象实现时间戳和日期时间的互相转换</p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM元素
+        const timestampInput = document.getElementById('timestampInput');
+        const timestampUnit = document.getElementById('timestampUnit');
+        const timezoneFrom = document.getElementById('timezoneFrom');
+        const datetimeInput = document.getElementById('datetimeInput');
+        const inputFormat = document.getElementById('inputFormat');
+        const timezoneTo = document.getElementById('timezoneTo');
+        const outputUnit = document.getElementById('outputUnit');
+        const outputFormatRadios = document.querySelectorAll('input[name="outputFormat"]');
+        const customFormatContainer = document.getElementById('customFormatContainer');
+        const customFormat = document.getElementById('customFormat');
+        const timestampResult = document.getElementById('timestampResult');
+        const datetimeResult = document.getElementById('datetimeResult');
+        const convertTimestampBtn = document.getElementById('convertTimestampBtn');
+        const convertDatetimeBtn = document.getElementById('convertDatetimeBtn');
+        const nowBtn = document.getElementById('nowBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyTimestampBtn = document.getElementById('copyTimestampBtn');
+        const currentTimeDisplay = document.getElementById('currentTime');
+        const currentTimestampDisplay = document.getElementById('currentTimestamp');
+        const statusMessage = document.getElementById('statusMessage');
+        
+        // 标题动画
+        document.addEventListener('DOMContentLoaded', function() {
+            const title = document.getElementById('animated-title');
+            const titleText = title.textContent;
+            title.textContent = '';
+            
+            // 为每个字符添加动画
+            for (let i = 0; i < titleText.length; i++) {
+                const charSpan = document.createElement('span');
+                charSpan.textContent = titleText[i];
+                charSpan.className = 'title-char';
+                charSpan.style.animationDelay = `${i * 0.1}s`;
+                title.appendChild(charSpan);
+            }
+            
+            // 设置默认值
+            setDefaultValues();
+            
+            // 初始化当前时间显示
+            updateCurrentTime();
+            
+            // 设置定时器，每秒更新当前时间
+            setInterval(updateCurrentTime, 1000);
+        });
+        
+        // 设置默认值
+        function setDefaultValues() {
+            // 设置当前时间戳（毫秒）
+            const now = Date.now();
+            timestampInput.value = Math.floor(now / 1000); // 默认显示秒
+            
+            // 设置当前日期时间
+            const date = new Date(now);
+            datetimeInput.value = formatDate(date, 'YYYY-MM-DD HH:mm:ss');
+            
+            // 立即执行一次转换
+            convertTimestamp();
+            convertDatetime();
+        }
+        
+        // 更新当前时间显示
+        function updateCurrentTime() {
+            const now = new Date();
+            const timestamp = Math.floor(now.getTime() / 1000);
+            
+            // 格式化当前时间
+            const formattedTime = formatDate(now, 'YYYY-MM-DD HH:mm:ss');
+            currentTimeDisplay.textContent = formattedTime;
+            currentTimestampDisplay.textContent = timestamp;
+        }
+        
+        // 显示状态消息
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message ' + type;
+            
+            // 3秒后隐藏消息
+            setTimeout(() => {
+                statusMessage.className = 'status-message';
+            }, 3000);
+        }
+        
+        // 格式化日期函数
+        function formatDate(date, format) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            
+            // 替换格式化字符串中的占位符
+            return format
+                .replace('YYYY', year)
+                .replace('MM', month)
+                .replace('DD', day)
+                .replace('HH', hours)
+                .replace('mm', minutes)
+                .replace('ss', seconds);
+        }
+        
+        // 解析日期字符串
+        function parseDateString(dateString, format) {
+            if (format === 'auto') {
+                // 尝试多种格式自动解析
+                const formats = [
+                    'YYYY-MM-DD HH:mm:ss',
+                    'YYYY/MM/DD HH:mm:ss',
+                    'YYYY年MM月DD日 HH时mm分ss秒',
+                    'MM/DD/YYYY HH:mm:ss',
+                    'DD/MM/YYYY HH:mm:ss'
+                ];
+                
+                for (const fmt of formats) {
+                    const date = parseWithFormat(dateString, fmt);
+                    if (date) return date;
+                }
+                
+                // 如果自动解析失败，尝试Date.parse
+                const timestamp = Date.parse(dateString);
+                if (!isNaN(timestamp)) {
+                    return new Date(timestamp);
+                }
+                
+                return null;
+            } else {
+                return parseWithFormat(dateString, format);
+            }
+        }
+        
+        // 根据特定格式解析日期
+        function parseWithFormat(dateString, format) {
+            // 提取格式中的分隔符
+            const datePart = format.split(' ')[0];
+            const timePart = format.includes(' ') ? format.split(' ')[1] : '';
+            
+            // 根据分隔符分割日期部分
+            let year, month, day;
+            
+            if (datePart.includes('-')) {
+                const parts = dateString.split(' ')[0].split('-');
+                if (datePart === 'YYYY-MM-DD') {
+                    [year, month, day] = parts;
+                } else if (datePart === 'MM-DD-YYYY') {
+                    [month, day, year] = parts;
+                }
+            } else if (datePart.includes('/')) {
+                const parts = dateString.split(' ')[0].split('/');
+                if (datePart === 'YYYY/MM/DD') {
+                    [year, month, day] = parts;
+                } else if (datePart === 'MM/DD/YYYY') {
+                    [month, day, year] = parts;
+                } else if (datePart === 'DD/MM/YYYY') {
+                    [day, month, year] = parts;
+                }
+            } else if (datePart.includes('年')) {
+                const dateMatch = dateString.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+                if (dateMatch) {
+                    [, year, month, day] = dateMatch;
+                }
+            }
+            
+            // 如果没有日期部分，返回null
+            if (!year || !month || !day) return null;
+            
+            // 解析时间部分
+            let hours = 0, minutes = 0, seconds = 0;
+            
+            if (timePart) {
+                const timeString = dateString.split(' ')[1] || '';
+                
+                if (timePart === 'HH:mm:ss') {
+                    const timeParts = timeString.split(':');
+                    if (timeParts.length >= 1) hours = parseInt(timeParts[0]) || 0;
+                    if (timeParts.length >= 2) minutes = parseInt(timeParts[1]) || 0;
+                    if (timeParts.length >= 3) seconds = parseInt(timeParts[2]) || 0;
+                } else if (timePart === 'HH时mm分ss秒') {
+                    const timeMatch = timeString.match(/(\d{1,2})时(\d{1,2})分(\d{1,2})秒/);
+                    if (timeMatch) {
+                        [, hours, minutes, seconds] = timeMatch;
+                    }
+                }
+            }
+            
+            // 创建Date对象
+            return new Date(year, month - 1, day, hours, minutes, seconds);
+        }
+        
+        // 应用时区偏移
+        function applyTimezone(date, timezone) {
+            const localDate = new Date(date.getTime());
+            
+            if (timezone === 'local') {
+                return localDate;
+            } else if (timezone === 'UTC' || timezone === 'GMT') {
+                // 返回UTC时间
+                return new Date(localDate.toUTCString());
+            } else {
+                // 处理时区偏移，如 "+08:00" 或 "-05:00"
+                const match = timezone.match(/([+-])(\d{2}):(\d{2})/);
+                if (match) {
+                    const [, sign, hours, minutes] = match;
+                    const offset = (sign === '+' ? 1 : -1) * (parseInt(hours) * 60 + parseInt(minutes));
+                    
+                    // 调整时间
+                    localDate.setMinutes(localDate.getMinutes() + offset - localDate.getTimezoneOffset());
+                    return localDate;
+                }
+            }
+            
+            return localDate;
+        }
+        
+        // 时间戳转日期时间
+        function convertTimestamp() {
+            const timestampStr = timestampInput.value.trim();
+            
+            if (!timestampStr) {
+                timestampResult.textContent = '请输入时间戳';
+                showStatus('请输入时间戳', 'error');
+                return;
+            }
+            
+            // 解析时间戳
+            let timestamp = parseFloat(timestampStr);
+            
+            if (isNaN(timestamp)) {
+                timestampResult.textContent = '时间戳格式错误';
+                showStatus('时间戳格式错误', 'error');
+                return;
+            }
+            
+            // 根据单位调整时间戳
+            if (timestampUnit.value === 'seconds') {
+                timestamp *= 1000; // 秒转毫秒
+            }
+            
+            // 创建Date对象
+            const date = new Date(timestamp);
+            
+            if (isNaN(date.getTime())) {
+                timestampResult.textContent = '时间戳超出有效范围';
+                showStatus('时间戳超出有效范围', 'error');
+                return;
+            }
+            
+            // 应用时区
+            const timezone = timezoneFrom.value;
+            const adjustedDate = applyTimezone(date, timezone);
+            
+            // 获取选中的输出格式
+            let selectedFormat = 'full';
+            for (const radio of outputFormatRadios) {
+                if (radio.checked) {
+                    selectedFormat = radio.value;
+                    break;
+                }
+            }
+            
+            // 根据格式显示结果
+            let result;
+            switch (selectedFormat) {
+                case 'full':
+                    result = formatDate(adjustedDate, 'YYYY-MM-DD HH:mm:ss');
+                    break;
+                case 'dateOnly':
+                    result = formatDate(adjustedDate, 'YYYY-MM-DD');
+                    break;
+                case 'timeOnly':
+                    result = formatDate(adjustedDate, 'HH:mm:ss');
+                    break;
+                case 'iso':
+                    result = adjustedDate.toISOString();
+                    break;
+                case 'custom':
+                    if (customFormat.value.trim()) {
+                        result = formatDate(adjustedDate, customFormat.value);
+                    } else {
+                        result = formatDate(adjustedDate, 'YYYY-MM-DD HH:mm:ss');
+                    }
+                    break;
+                default:
+                    result = formatDate(adjustedDate, 'YYYY-MM-DD HH:mm:ss');
+            }
+            
+            // 显示结果
+            timestampResult.textContent = result;
+            showStatus('时间戳转换成功', 'success');
+        }
+        
+        // 日期时间转时间戳
+        function convertDatetime() {
+            const datetimeStr = datetimeInput.value.trim();
+            
+            if (!datetimeStr) {
+                datetimeResult.textContent = '请输入日期时间';
+                showStatus('请输入日期时间', 'error');
+                return;
+            }
+            
+            // 解析日期时间
+            const format = inputFormat.value;
+            const date = parseDateString(datetimeStr, format);
+            
+            if (!date || isNaN(date.getTime())) {
+                datetimeResult.textContent = '日期时间格式错误';
+                showStatus('日期时间格式错误', 'error');
+                return;
+            }
+            
+            // 应用时区（反向调整）
+            const timezone = timezoneTo.value;
+            const adjustedDate = applyTimezone(date, timezone);
+            
+            // 获取时间戳
+            let timestamp = adjustedDate.getTime();
+            
+            // 根据单位调整
+            if (outputUnit.value === 'seconds') {
+                timestamp = Math.floor(timestamp / 1000);
+            }
+            
+            // 显示结果
+            datetimeResult.textContent = timestamp;
+            showStatus('日期时间转换成功', 'success');
+        }
+        
+        // 使用当前时间
+        function useCurrentTime() {
+            const now = Date.now();
+            const nowSeconds = Math.floor(now / 1000);
+            
+            // 设置时间戳输入
+            timestampInput.value = nowSeconds;
+            
+            // 设置日期时间输入
+            const date = new Date(now);
+            datetimeInput.value = formatDate(date, 'YYYY-MM-DD HH:mm:ss');
+            
+            // 执行转换
+            convertTimestamp();
+            convertDatetime();
+            
+            showStatus('已使用当前时间', 'success');
+        }
+        
+        // 复制结果
+        function copyResult() {
+            // 优先复制时间戳转换结果
+            let textToCopy = timestampResult.textContent;
+            
+            // 如果没有内容或显示默认文本，则尝试复制日期时间转换结果
+            if (!textToCopy || textToCopy === '等待转换...' || textToCopy === '时间戳格式错误') {
+                textToCopy = datetimeResult.textContent;
+            }
+            
+            if (!textToCopy || textToCopy === '等待转换...' || textToCopy === '日期时间格式错误') {
+                showStatus('没有可复制的内容', 'error');
+                return;
+            }
+            
+            try {
+                // 优先使用现代Clipboard API
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        showStatus('结果已复制到剪贴板', 'success');
+                    }).catch(() => {
+                        // 如果现代API失败，回退到传统方法
+                        const textarea = document.createElement('textarea');
+                        textarea.value = textToCopy;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        showStatus('结果已复制到剪贴板', 'success');
+                    });
+                } else {
+                    // 传统方法
+                    const textarea = document.createElement('textarea');
+                    textarea.value = textToCopy;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    showStatus('结果已复制到剪贴板', 'success');
+                }
+            } catch (err) {
+                showStatus('复制失败，请手动复制内容', 'error');
+            }
+        }
+        
+        // 事件监听
+        convertTimestampBtn.addEventListener('click', convertTimestamp);
+        convertDatetimeBtn.addEventListener('click', convertDatetime);
+        nowBtn.addEventListener('click', useCurrentTime);
+        clearBtn.addEventListener('click', () => {
+            timestampInput.value = '';
+            datetimeInput.value = '';
+            timestampResult.textContent = '等待转换...';
+            datetimeResult.textContent = '等待转换...';
+            showStatus('已清空所有内容', 'success');
+        });
+        copyTimestampBtn.addEventListener('click', copyResult);
+        
+        // 输入框回车键触发转换
+        timestampInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                convertTimestamp();
+            }
+        });
+        
+        datetimeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                convertDatetime();
+            }
+        });
+        
+        // 自定义格式显示/隐藏
+        outputFormatRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.value === 'custom') {
+                    customFormatContainer.style.display = 'block';
+                } else {
+                    customFormatContainer.style.display = 'none';
+                }
+                
+                // 如果已经输入了时间戳，立即更新转换结果
+                if (timestampInput.value.trim()) {
+                    convertTimestamp();
+                }
+            });
+        });
+        
+        // 自定义格式输入时更新结果
+        customFormat.addEventListener('input', () => {
+            if (timestampInput.value.trim()) {
+                convertTimestamp();
+            }
+        });
+        
+        // 其他选择变化时更新结果
+        timestampUnit.addEventListener('change', () => {
+            if (timestampInput.value.trim()) {
+                convertTimestamp();
+            }
+        });
+        
+        timezoneFrom.addEventListener('change', () => {
+            if (timestampInput.value.trim()) {
+                convertTimestamp();
+            }
+        });
+        
+        inputFormat.addEventListener('change', () => {
+            if (datetimeInput.value.trim()) {
+                convertDatetime();
+            }
+        });
+        
+        timezoneTo.addEventListener('change', () => {
+            if (datetimeInput.value.trim()) {
+                convertDatetime();
+            }
+        });
+        
+        outputUnit.addEventListener('change', () => {
+            if (datetimeInput.value.trim()) {
+                convertDatetime();
+            }
+        });
+        
+        // 页面加载时自动转换
+        window.addEventListener('load', () => {
+            // 添加示例提示
+            timestampInput.placeholder = '输入时间戳（秒或毫秒），例如：1672502400 或 1672502400000';
+            datetimeInput.placeholder = '输入日期时间，例如：2023-01-01 12:00:00 或 2023/01/01 12:00:00';
+            customFormat.placeholder = '自定义格式，例如：YYYY年MM月DD日 HH时mm分ss秒';
+        });
+    </script>
+</body>
+</html>
